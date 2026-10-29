@@ -1,0 +1,563 @@
+{
+  "type": "workflow_collections",
+  "data": [
+    {
+      "@context": "/api/3/contexts/WorkflowCollection",
+      "@type": "WorkflowCollection",
+      "name": "SOC Hygiene",
+      "description": "Periodic revalidation of standing blocks.",
+      "visible": true,
+      "image": null,
+      "uuid": "390d415e-6ac3-4f9e-b544-20b052ac935e",
+      "createDate": 1788346911.0440292,
+      "modifyDate": 1788346911.0440297,
+      "deletedAt": null,
+      "importedBy": [],
+      "recordTags": [
+        "SOC-Hygiene"
+      ],
+      "workflows": [
+        {
+          "@type": "Workflow",
+          "triggerLimit": null,
+          "name": "Blocked Indicator Revalidation",
+          "aliasName": null,
+          "tag": null,
+          "description": "Re-checks the oldest standing blocks in Blocked IPs against AbuseIPDB and FortiGuard. IPs at or above the configured AbuseIPDB threshold stay blocked; those that have decayed below it become removal candidates, unless FortiGuard still flags them, in which case they are held back for review. Runs on IPs by default; set enabled_types in the Configuration step to widen it to domains, URLs and hashes, which FortiGuard alone scores. Removal is a dummy step - nothing is deleted.",
+          "isActive": true,
+          "debug": true,
+          "singleRecordExecution": false,
+          "remoteExecutableFlag": false,
+          "parameters": [],
+          "synchronous": false,
+          "lastModifyDate": 1788346911,
+          "collection": "/api/3/workflow_collections/390d415e-6ac3-4f9e-b544-20b052ac935e",
+          "versions": [],
+          "triggerStep": "/api/3/workflow_steps/d86ebd35-4d4f-453d-8219-5874ef59f0f1",
+          "steps": [
+            {
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "description": "Analyst starts the review. The playbook fetches its own batch, so the record selection is not used.",
+              "arguments": {
+                "route": "f4316c10-2d16-45da-9fb5-16f71161046a",
+                "resources": [
+                  "s_b_m_blocked_i_ps"
+                ],
+                "__triggerLimit": true,
+                "inputVariables": [],
+                "step_variables": {
+                  "input": {
+                    "params": [],
+                    "records": "{{vars.input.records}}"
+                  }
+                },
+                "triggerOnSource": true,
+                "displayConditions": {
+                  "s_b_m_blocked_i_ps": {
+                    "sort": [],
+                    "limit": 30,
+                    "logic": "AND",
+                    "filters": []
+                  }
+                },
+                "executeButtonText": "Revalidate Blocked IPs",
+                "noRecordExecution": true,
+                "showToasterMessage": {
+                  "visible": true,
+                  "messageVisible": true
+                },
+                "triggerOnReplicate": false,
+                "singleRecordExecution": false
+              },
+              "status": null,
+              "top": "40",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/f414d039-bb0d-4e59-9c39-a8f1e880b18a",
+              "group": null,
+              "uuid": "d86ebd35-4d4f-453d-8219-5874ef59f0f1"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Configuration",
+              "description": "Tuning knobs. abuse_threshold is the AbuseIPDB confidence percentage at or above which an indicator stays blocked. fortiguard_override=yes keeps an indicator FortiGuard still flags even when AbuseIPDB has decayed.",
+              "arguments": {
+                "abuse_threshold": 10,
+                "max_indicators": 10,
+                "fortiguard_override": "yes",
+                "containment_mode": "SIMULATED",
+                "enabled_types": "ip"
+              },
+              "status": null,
+              "top": "190",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "34fe2880-a516-499c-9982-662f1b997c06"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Find Blocked IPs",
+              "description": "Oldest blocked indicators first - those are most likely to have decayed. This fetches a 30-record window; Extract Indicators then filters by enabled type and caps the batch at max_indicators.",
+              "arguments": {
+                "query": {
+                  "sort": [
+                    {
+                      "field": "createDate",
+                      "direction": "ASC"
+                    }
+                  ],
+                  "limit": 30,
+                  "logic": "AND",
+                  "filters": [
+                    {
+                      "type": "primitive",
+                      "field": "idicator",
+                      "operator": "isnotnull",
+                      "_operator": "isnotnull"
+                    }
+                  ]
+                },
+                "module": "s_b_m_blocked_i_ps?$limit=30",
+                "checkboxFields": true,
+                "step_variables": []
+              },
+              "status": null,
+              "top": "340",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/b593663d-7d13-40ce-a3a3-96dece928770",
+              "group": null,
+              "uuid": "4f85bffb-0e36-4403-8ff2-f20a4aa5fc91"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Extract Indicators",
+              "description": "Validates each value really is an IPv4 address, drops blanks and duplicates, and trims the batch to max_indicators.",
+              "arguments": {
+                "config": "",
+                "params": {
+                  "python_function": "import json\ntrue, false, null = True, False, None\n\nMAXN = {{ vars.max_indicators | default(10) }}\n# Which indicator types this run should process. Today \"ip\". Change the\n# Configuration step to \"ip,domain,url,hash\" to widen it - nothing else in the\n# playbook needs editing; AbuseIPDB is skipped for non-IP types automatically\n# and FortiGuard handles all four.\nENABLED = \"{{ vars.enabled_types | default('ip') }}\".lower()\n\nrecs = [{% for r in vars.steps.Find_Blocked_IPs %}{\"iri\": \"{{ r['@id'] }}\", \"ind\": \"{{ r.idicator | default('', true) | replace('\"', '') | trim }}\", \"reason\": \"{{ r.reason | default('', true) | replace('\"', '') }}\", \"fw\": \"{{ r.firewall | default('', true) | replace('\"', '') }}\", \"ticket\": \"{{ r.ticketId | default('', true) | replace('\"', '') }}\", \"origin\": \"{{ r.orgination | default('', true) | replace('\"', '') }}\", \"created\": \"{{ r.createDate | default('', true) }}\"}{% if not loop.last %}, {% endif %}{% endfor %}]\n\nenabled_types = []\nfor t in ENABLED.split(\",\"):\n    t = t.strip()\n    if t:\n        enabled_types.append(t)\n\nHEXCHARS = \"0123456789abcdef\"\n\n\ndef is_ipv4(s):\n    parts = s.split(\".\")\n    if len(parts) != 4:\n        return False\n    for p in parts:\n        if not p.isdigit():\n            return False\n        n = int(p)\n        if n < 0 or n > 255:\n            return False\n        if len(p) > 1 and p[0] == \"0\":\n            return False\n    return True\n\n\ndef is_hex(s):\n    low = s.lower()\n    for ch in low:\n        if ch not in HEXCHARS:\n            return False\n    return len(low) > 0\n\n\ndef is_hash(s):\n    return len(s) in (32, 40, 64, 128) and is_hex(s)\n\n\ndef is_url(s):\n    low = s.lower()\n    return low.startswith(\"http://\") or low.startswith(\"https://\")\n\n\ndef is_domain(s):\n    if \".\" not in s or \" \" in s:\n        return False\n    if s.endswith(\".\"):\n        return False\n    labels = s.split(\".\")\n    if len(labels) < 2:\n        return False\n    tld = labels[-1]\n    if len(tld) < 2 or not tld.isalpha():\n        return False\n    for lab in labels:\n        if not lab:\n            return False\n        for ch in lab:\n            if not (ch.isalnum() or ch == \"-\"):\n                return False\n        if lab[0] == \"-\" or lab[-1] == \"-\":\n            return False\n    return True\n\n\ndef classify(s):\n    \"\"\"Order matters: an IP is dotted like a domain, a hash is alphanumeric.\"\"\"\n    if is_ipv4(s):\n        return \"ip\"\n    if is_url(s):\n        return \"url\"\n    if is_hash(s):\n        return \"hash\"\n    if is_domain(s):\n        return \"domain\"\n    return \"unknown\"\n\n\nindicators = []\nskipped = []\nseen = {}\ntype_counts = {\"ip\": 0, \"domain\": 0, \"url\": 0, \"hash\": 0, \"unknown\": 0}\n\nfor r in recs:\n    val = (r.get(\"ind\") or \"\").strip()\n    if not val:\n        skipped.append({\"iri\": r.get(\"iri\"), \"value\": \"\", \"type\": \"\",\n                        \"why\": \"empty indicator field\"})\n        continue\n    kind = classify(val)\n    type_counts[kind] = type_counts.get(kind, 0) + 1\n\n    if kind == \"unknown\":\n        skipped.append({\"iri\": r.get(\"iri\"), \"value\": val, \"type\": kind,\n                        \"why\": \"not a recognised IP, domain, URL or hash\"})\n        continue\n    if kind not in enabled_types:\n        skipped.append({\"iri\": r.get(\"iri\"), \"value\": val, \"type\": kind,\n                        \"why\": \"type '%s' is not enabled for this run\" % kind})\n        continue\n    key = kind + \"|\" + val.lower()\n    if key in seen:\n        skipped.append({\"iri\": r.get(\"iri\"), \"value\": val, \"type\": kind,\n                        \"why\": \"duplicate in this batch\"})\n        continue\n    seen[key] = 1\n\n    indicators.append({\n        \"iri\": r.get(\"iri\") or \"\",\n        \"value\": val,\n        \"ip\": val,\n        \"type\": kind,\n        \"reason\": r.get(\"reason\") or \"\",\n        \"firewall\": r.get(\"fw\") or \"\",\n        \"ticket\": r.get(\"ticket\") or \"\",\n        \"origin\": r.get(\"origin\") or \"\",\n        \"created\": r.get(\"created\") or \"\",\n    })\n    if len(indicators) >= MAXN:\n        break\n\n# AbuseIPDB only understands IPs. FortiGuard takes every enabled type, so it\n# gets the full list and the two result sets are joined back up in Evaluate.\nip_list = []\nall_list = []\nfor i in indicators:\n    all_list.append(i[\"value\"])\n    if i[\"type\"] == \"ip\":\n        ip_list.append(i[\"value\"])\n\nprint(json.dumps({\n    \"indicators\": indicators,\n    \"ip_list\": ip_list,\n    \"all_list\": all_list,\n    \"count\": len(indicators),\n    \"ip_count\": len(ip_list),\n    \"skipped\": skipped,\n    \"fetched\": len(recs),\n    \"max_indicators\": MAXN,\n    \"enabled_types\": enabled_types,\n    \"type_counts\": type_counts,\n}))\n"
+                },
+                "version": "2.2.1",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": []
+              },
+              "status": null,
+              "top": "490",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "e6687a70-4612-4f5b-996f-894a75b1018a"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Enrich AbuseIPDB",
+              "description": "One lookup per IP. ignore_errors keeps a single failed lookup from killing the run.",
+              "arguments": {
+                "name": "AbuseIPDB",
+                "config": "8a644fee-4313-49d2-bf17-1b21f39d1af0",
+                "params": {
+                  "ip": "{{vars.item}}",
+                  "days": "90"
+                },
+                "version": "2.0.0",
+                "connector": "abuseipdb",
+                "operation": "ip_lookup",
+                "operationTitle": "IP Lookup",
+                "for_each": {
+                  "item": "{{ vars.steps.Extract_Indicators.data['code_output']['ip_list'] }}",
+                  "parallel": false,
+                  "condition": ""
+                },
+                "ignore_errors": true,
+                "pickFromTenant": false,
+                "step_variables": []
+              },
+              "status": null,
+              "top": "640",
+              "left": "300",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "uuid": "fc9652a4-536c-4f4a-8ff3-13bfae930d8d"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Enrich FortiGuard",
+              "description": "Runs over every enabled indicator type, not just IPs. Second opinion for IPs; the only source for domains, URLs and hashes.",
+              "arguments": {
+                "name": "Fortinet FortiGuard Threat Intelligence",
+                "config": "e02562a9-a719-4081-ac83-3dfebbb66422",
+                "params": {
+                  "indicator": "{{vars.item}}"
+                },
+                "version": "4.2.0",
+                "connector": "fortinet-fortiguard-threat-intelligence",
+                "operation": "threat_intel_search",
+                "operationTitle": "Threat Intel Search",
+                "for_each": {
+                  "item": "{{ vars.steps.Extract_Indicators.data['code_output']['all_list'] }}",
+                  "parallel": false,
+                  "condition": ""
+                },
+                "ignore_errors": true,
+                "pickFromTenant": false,
+                "step_variables": []
+              },
+              "status": null,
+              "top": "640",
+              "left": "860",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "uuid": "062ef473-8aed-4ec8-8241-7318ab8ce454"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Evaluate Against Threshold",
+              "description": "Buckets every indicator into KEEP or CLEAN against abuse_threshold and records the reasoning for each one.",
+              "arguments": {
+                "config": "",
+                "params": {
+                  "python_function": "import json, time\ntrue, false, null = True, False, None\n\nTHRESHOLD = {{ vars.abuse_threshold | default(10) }}\nFG_OVERRIDE = \"{{ vars.fortiguard_override | default('yes') }}\".lower()\nMODE = \"{{ vars.containment_mode | default('SIMULATED') }}\"\n\next = {{ vars.steps.Extract_Indicators.data['code_output'] }}\ninds = ext.get(\"indicators\") or []\n\nab = [{% for e in vars.steps.Enrich_AbuseIPDB %}{\"ip\": \"{{ e.data.ipAddress | default('', true) }}\", \"score\": {{ e.data.abuseConfidenceScore | default(0, true) }}, \"reports\": {{ e.data.totalReports | default(0, true) }}, \"distinct\": {{ e.data.numDistinctUsers | default(0, true) }}, \"wl\": \"{{ e.data.isWhitelisted | default('', true) }}\", \"cc\": \"{{ e.data.countryCode | default('', true) }}\", \"isp\": \"{{ e.data.isp | default('', true) | replace('\"', '') }}\", \"usage\": \"{{ e.data.usageType | default('', true) | replace('\"', '') }}\", \"dom\": \"{{ e.data.domain | default('', true) | replace('\"', '') }}\", \"last\": \"{{ e.data.lastReportedAt | default('', true) }}\", \"tor\": \"{{ e.data.isTor | default('', true) }}\"}{% if not loop.last %}, {% endif %}{% endfor %}]\n\nfg = [{% for e in vars.steps.Enrich_FortiGuard %}{\"conf\": \"{{ e.data.confidence | default('', true) }}\", \"wf\": \"{{ e.data.wf_cate | default('', true) | replace('\"', '') }}\", \"ioc\": \"{{ e.data.ioc_cate | default('', true) | replace('\"', '') }}\", \"av\": \"{{ e.data.av_cate | default('', true) | replace('\"', '') }}\", \"malware\": \"{{ e.data.malware_name | default('', true) | replace('\"', '') }}\", \"tags\": \"{{ e.data.ioc_tags | default([], true) | join(', ') | replace('\"', '') }}\", \"msg\": \"{{ e.data.message | default('', true) | replace('\"', '') }}\"}{% if not loop.last %}, {% endif %}{% endfor %}]\n\n\ndef truthy(v):\n    return str(v).strip().lower() in (\"true\", \"1\", \"yes\")\n\n\ndef as_date(v):\n    \"\"\"Epoch float -> readable date. Anything else passes through.\"\"\"\n    s = str(v or \"\").strip()\n    if not s:\n        return \"\"\n    try:\n        return time.strftime(\"%Y-%m-%d\", time.gmtime(float(s)))\n    except Exception:\n        return s\n\n\ndef fg_is_bad(f):\n    \"\"\"FortiGuard says malicious. Parsed BY FIELD - never substring the blob.\"\"\"\n    if not f:\n        return False, \"\"\n    reasons = []\n    conf = str(f.get(\"conf\") or \"\").strip().lower()\n    if conf in (\"medium\", \"high\"):\n        reasons.append(\"confidence=\" + str(f.get(\"conf\")))\n    mal = str(f.get(\"malware\") or \"\").strip()\n    if mal and mal.lower() not in (\"\", \"none\", \"null\", \"n/a\"):\n        reasons.append(\"malware=\" + mal)\n    ioc = str(f.get(\"ioc\") or \"\").strip()\n    if ioc and ioc.lower() not in (\"\", \"none\", \"null\", \"n/a\", \"unknown\"):\n        reasons.append(\"ioc_cate=\" + ioc)\n    av = str(f.get(\"av\") or \"\").strip()\n    if av and av.lower() not in (\"\", \"none\", \"null\", \"n/a\", \"unknown\"):\n        reasons.append(\"av_cate=\" + av)\n    return (len(reasons) > 0), \"; \".join(reasons)\n\n\nkeep = []\nreview = []\nclean = []\nrows = []\n\n# AbuseIPDB ran only over the IP subset, FortiGuard over every enabled\n# indicator. Join AbuseIPDB back by address and FortiGuard by position.\nab_by_ip = {}\nfor a in ab:\n    if a.get(\"ip\"):\n        ab_by_ip[str(a[\"ip\"])] = a\n\nfor i in range(len(inds)):\n    rec = inds[i]\n    kind = rec.get(\"type\") or \"ip\"\n    val = rec.get(\"value\") or rec.get(\"ip\") or \"\"\n    a = ab_by_ip.get(val) or {}\n    f = fg[i] if i < len(fg) else {}\n\n    raw = a.get(\"score\")\n    have_ab = (kind == \"ip\") and raw is not None and str(raw) != \"\"\n    score = int(raw or 0)\n\n    bad_fg, fg_reason = fg_is_bad(f)\n    over_thresh = have_ab and score >= THRESHOLD\n\n    reasons = []\n    if kind == \"ip\":\n        if have_ab:\n            if over_thresh:\n                reasons.append(\"AbuseIPDB %d%% at or above threshold %d%%\"\n                               % (score, THRESHOLD))\n            else:\n                reasons.append(\"AbuseIPDB %d%% below threshold %d%%\"\n                               % (score, THRESHOLD))\n        else:\n            reasons.append(\"AbuseIPDB returned no score for this IP\")\n    else:\n        reasons.append(\"%s indicator - AbuseIPDB does not apply, \"\n                       \"FortiGuard is the only source\" % kind)\n    if bad_fg:\n        reasons.append(\"FortiGuard: \" + fg_reason)\n    elif str(f.get(\"msg\") or \"\"):\n        reasons.append(\"FortiGuard: \" + str(f.get(\"msg\")))\n\n    # For IPs the threshold is authoritative; FortiGuard never silently\n    # reverses it, it can only pull an indicator out of the removal set into\n    # REVIEW so a human still decides. For non-IP types there is no AbuseIPDB\n    # score at all, so FortiGuard alone decides.\n    if kind == \"ip\":\n        if over_thresh:\n            verdict = \"KEEP\"\n        elif bad_fg and FG_OVERRIDE in (\"yes\", \"true\", \"1\"):\n            verdict = \"REVIEW\"\n            reasons.append(\"held back from removal: FortiGuard still flags this IP\")\n        else:\n            verdict = \"CLEAN\"\n    else:\n        if bad_fg:\n            verdict = \"KEEP\"\n        else:\n            verdict = \"CLEAN\"\n\n    if truthy(a.get(\"wl\")):\n        reasons.append(\"AbuseIPDB lists this IP as whitelisted\")\n\n    row = {\n        \"ip\": val,\n        \"value\": val,\n        \"type\": kind,\n        \"iri\": rec.get(\"iri\"),\n        \"verdict\": verdict,\n        \"abuse_score\": score if have_ab else null,\n        \"abuse_applies\": have_ab,\n        \"abuse_reports\": int(a.get(\"reports\") or 0),\n        \"abuse_distinct_users\": int(a.get(\"distinct\") or 0),\n        \"whitelisted\": truthy(a.get(\"wl\")),\n        \"is_tor\": truthy(a.get(\"tor\")),\n        \"country\": a.get(\"cc\") or \"\",\n        \"isp\": a.get(\"isp\") or \"\",\n        \"usage_type\": a.get(\"usage\") or \"\",\n        \"hostname\": a.get(\"dom\") or \"\",\n        \"last_reported\": (a.get(\"last\") or \"\")[:10],\n        \"fortiguard_confidence\": f.get(\"conf\") or \"\",\n        \"fortiguard_category\": f.get(\"wf\") or \"\",\n        \"fortiguard_malware\": f.get(\"malware\") or \"\",\n        \"fortiguard_tags\": f.get(\"tags\") or \"\",\n        \"fortiguard_flagged\": bad_fg,\n        \"block_reason\": rec.get(\"reason\") or \"\",\n        \"firewall\": rec.get(\"firewall\") or \"\",\n        \"ticket\": rec.get(\"ticket\") or \"\",\n        \"blocked_on\": as_date(rec.get(\"created\")),\n        \"rationale\": reasons,\n    }\n    rows.append(row)\n    if verdict == \"KEEP\":\n        keep.append(row)\n    elif verdict == \"REVIEW\":\n        review.append(row)\n    else:\n        clean.append(row)\n\nn_total = len(rows)\nn_keep = len(keep)\nn_review = len(review)\nn_clean = len(clean)\n\nclean_ips = []\nclean_iris = []\nfor r in clean:\n    clean_ips.append(r[\"ip\"])\n    clean_iris.append(r[\"iri\"])\nkeep_ips = []\nfor r in keep:\n    keep_ips.append(r[\"ip\"])\nreview_ips = []\nfor r in review:\n    review_ips.append(r[\"ip\"])\n\nif n_total == 0:\n    assessment = (\"No indicators of an enabled type were retrieved \"\n                  \"from Blocked IPs.\")\nelse:\n    bits = []\n    if n_keep:\n        bits.append(\"%d still at or above the %d%% threshold\" % (n_keep, THRESHOLD))\n    if n_review:\n        bits.append(\"%d below the threshold but still flagged by FortiGuard, so \"\n                    \"held back for review\" % n_review)\n    if n_clean:\n        bits.append(\"%d decayed and safe to remove\" % n_clean)\n    assessment = \"Of %d indicator(s): %s.\" % (n_total, \"; \".join(bits))\n\nresult = {\n    \"meta\": {\n        \"playbook\": \"Blocked Indicator Revalidation\",\n        \"version\": \"1.2\",\n        \"analysed_at\": time.strftime(\"%Y-%m-%d %H:%M:%S UTC\", time.gmtime()),\n        \"containment_mode\": MODE,\n        \"indicator_types\": ext.get(\"enabled_types\") or [],\n    },\n    \"config\": {\n        \"abuse_threshold\": THRESHOLD,\n        \"fortiguard_override\": FG_OVERRIDE,\n        \"max_indicators\": ext.get(\"max_indicators\"),\n    },\n    \"summary\": {\n        \"fetched\": ext.get(\"fetched\"),\n        \"evaluated\": n_total,\n        \"keep\": n_keep,\n        \"review\": n_review,\n        \"clean\": n_clean,\n        \"skipped\": len(ext.get(\"skipped\") or []),\n        \"enabled_types\": ext.get(\"enabled_types\") or [],\n        \"type_counts\": ext.get(\"type_counts\") or {},\n        \"assessment\": assessment,\n    },\n    \"indicators\": rows,\n    \"keep\": keep,\n    \"review\": review,\n    \"clean\": clean,\n    \"actionable\": {\n        \"keep_ips\": keep_ips,\n        \"review_ips\": review_ips,\n        \"clean_ips\": clean_ips,\n        \"clean_iris\": clean_iris,\n    },\n    \"skipped\": ext.get(\"skipped\") or [],\n}\n\nprint(json.dumps({\n    \"result\": result,\n    \"total\": n_total,\n    \"keep_count\": n_keep,\n    \"review_count\": n_review,\n    \"clean_count\": n_clean,\n    \"indicators\": rows,\n    \"assessment\": assessment,\n    \"threshold\": THRESHOLD,\n}))\n"
+                },
+                "version": "2.2.1",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": []
+              },
+              "status": null,
+              "top": "790",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "67999a7e-560b-43a8-a689-38ba97545fc5"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Any Indicators Found",
+              "description": "Guards the review step so an empty batch still finishes cleanly.",
+              "arguments": {
+                "conditions": [
+                  {
+                    "option": "Indicators to review",
+                    "step_iri": "/api/3/workflow_steps/d5bf3a5b-c57d-4ca1-9d07-106465eec8a5",
+                    "condition": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['total'] > 0 }}",
+                    "step_name": "Analyst Review"
+                  },
+                  {
+                    "option": "Nothing to review",
+                    "default": true,
+                    "step_iri": "/api/3/workflow_steps/d1016fad-de3d-4523-84f0-4ea3348efb1c",
+                    "step_name": "No Indicators Found"
+                  }
+                ],
+                "step_variables": []
+              },
+              "status": null,
+              "top": "940",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
+              "group": null,
+              "uuid": "3f9dbbdb-55a1-49fe-9e8f-636e98b92c0f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Analyst Review",
+              "description": "Shows the full enrichment table and waits for a decision.",
+              "arguments": {
+                "type": "InputBased",
+                "input": {
+                  "schema": {
+                    "title": "Blocked IP Revalidation - {{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }} of {{ vars.steps.Evaluate_Against_Threshold.data['code_output']['total'] }} candidates for removal",
+                    "description": "<div style=\"font-family:Segoe UI,Arial,sans-serif;font-size:13px;color:#e8e8ec;\">\n\n<p>These standing blocks in <b>Blocked IPs</b> were re-checked against AbuseIPDB and FortiGuard.\nNothing has been changed yet. An indicator is a <b>removal candidate</b> when its AbuseIPDB\nconfidence has decayed <b>below the {{ vars.abuse_threshold }}% threshold</b> and no other source\nstill flags it.</p>\n\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-size:12px;width:100%;border-color:#444;\">\n<tr>\n  <td style=\"background:#1e4032;color:#7ee0b0;width:25%;text-align:center;\"><b>SAFE TO REMOVE</b><br><span style=\"font-size:22px;\">{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }}</span></td>\n  <td style=\"background:#4a3a1e;color:#ffd479;width:25%;text-align:center;\"><b>NEEDS REVIEW</b><br><span style=\"font-size:22px;\">{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['review_count'] }}</span></td>\n  <td style=\"background:#4a2328;color:#ff9b9b;width:25%;text-align:center;\"><b>STAY BLOCKED</b><br><span style=\"font-size:22px;\">{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['keep_count'] }}</span></td>\n  <td style=\"background:#33333f;color:#fff;width:25%;text-align:center;\"><b>EVALUATED</b><br><span style=\"font-size:22px;\">{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['total'] }}</span></td>\n</tr>\n</table>\n\n<p style=\"margin-top:10px;\"><i>{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['assessment'] }}</i></p>\n\n<h3 style=\"background:#2b2b3d;color:#fff;padding:5px 8px;margin:14px 0 0;\">Safe to remove &mdash; decayed below {{ vars.abuse_threshold }}%, nothing else flags them</h3>\n<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse:collapse;font-size:12px;width:100%;border-color:#444;\">\n<tr style=\"background:#3d3d52;color:#fff;\">\n  <th>Indicator</th><th>Type</th><th>Abuse<br>score</th><th>Reports</th><th>Last reported</th><th>Country</th><th>ISP</th><th>Originally blocked for</th>\n</tr>\n{% for r in vars.steps.Evaluate_Against_Threshold.data['code_output']['indicators'] %}{% if r.verdict == 'CLEAN' %}\n<tr>\n  <td style=\"color:#7ee0b0;word-break:break-all;\"><b>{{ r.value }}</b></td>\n  <td style=\"color:#b9b9c4;text-transform:uppercase;\">{{ r.type }}</td>\n  <td style=\"color:#e8e8ec;text-align:center;\">{% if r.abuse_applies %}{{ r.abuse_score }}%{% else %}n/a{% endif %}</td>\n  <td style=\"color:#e8e8ec;text-align:center;\">{{ r.abuse_reports }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.last_reported }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.country }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.isp }}</td>\n  <td style=\"color:#b9b9c4;\">{{ r.block_reason }}</td>\n</tr>\n{% endif %}{% endfor %}\n</table>\n\n<h3 style=\"background:#2b2b3d;color:#fff;padding:5px 8px;margin:14px 0 0;\">Held back for review &mdash; AbuseIPDB decayed, FortiGuard still flags them</h3>\n<p style=\"color:#b9b9c4;margin:6px 0;\">These fell below the {{ vars.abuse_threshold }}% threshold, so AbuseIPDB alone would have removed them. FortiGuard still lists them, so they are <b>not</b> in the removal set. Decide these case by case.</p>\n<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse:collapse;font-size:12px;width:100%;border-color:#444;\">\n<tr style=\"background:#3d3d52;color:#fff;\">\n  <th>Indicator</th><th>Type</th><th>Abuse<br>score</th><th>FortiGuard</th><th>Category / tags</th><th>Country</th><th>ISP</th><th>Originally blocked for</th>\n</tr>\n{% for r in vars.steps.Evaluate_Against_Threshold.data['code_output']['indicators'] %}{% if r.verdict == 'REVIEW' %}\n<tr>\n  <td style=\"color:#ffd479;word-break:break-all;\"><b>{{ r.value }}</b></td>\n  <td style=\"color:#b9b9c4;text-transform:uppercase;\">{{ r.type }}</td>\n  <td style=\"color:#e8e8ec;text-align:center;\">{% if r.abuse_applies %}{{ r.abuse_score }}%{% else %}n/a{% endif %}</td>\n  <td style=\"color:#e8e8ec;text-align:center;\"><b>{{ r.fortiguard_confidence }}</b></td>\n  <td style=\"color:#e8e8ec;\">{{ r.fortiguard_category }}{% if r.fortiguard_tags %} &middot; {{ r.fortiguard_tags }}{% endif %}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.country }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.isp }}</td>\n  <td style=\"color:#b9b9c4;\">{{ r.block_reason }}</td>\n</tr>\n{% endif %}{% endfor %}\n</table>\n\n<h3 style=\"background:#2b2b3d;color:#fff;padding:5px 8px;margin:14px 0 0;\">Still malicious &mdash; these stay blocked</h3>\n<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse:collapse;font-size:12px;width:100%;border-color:#444;\">\n<tr style=\"background:#3d3d52;color:#fff;\">\n  <th>Indicator</th><th>Type</th><th>Abuse<br>score</th><th>Reports</th><th>Country</th><th>ISP</th><th>Why it stays</th>\n</tr>\n{% for r in vars.steps.Evaluate_Against_Threshold.data['code_output']['indicators'] %}{% if r.verdict == 'KEEP' %}\n<tr>\n  <td style=\"color:#ff6b6b;word-break:break-all;\"><b>{{ r.value }}</b>{% if r.is_tor %} <span style=\"color:#ffd479;\">TOR</span>{% endif %}</td>\n  <td style=\"color:#b9b9c4;text-transform:uppercase;\">{{ r.type }}</td>\n  <td style=\"color:#e8e8ec;text-align:center;\"><b>{% if r.abuse_applies %}{{ r.abuse_score }}%{% else %}n/a{% endif %}</b></td>\n  <td style=\"color:#e8e8ec;text-align:center;\">{{ r.abuse_reports }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.country }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.isp }}</td>\n  <td style=\"color:#b9b9c4;\">{{ r.rationale | join('; ') }}</td>\n</tr>\n{% endif %}{% endfor %}\n</table>\n\n<h3 style=\"background:#2b2b3d;color:#fff;padding:5px 8px;margin:14px 0 0;\">Full detail</h3>\n<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse:collapse;font-size:12px;width:100%;border-color:#444;\">\n<tr style=\"background:#3d3d52;color:#fff;\">\n  <th>Indicator</th><th>Type</th><th>Verdict</th><th>Abuse</th><th>FortiGuard</th><th>Blocked on</th><th>Firewall</th><th>Ticket</th>\n</tr>\n{% for r in vars.steps.Evaluate_Against_Threshold.data['code_output']['indicators'] %}\n<tr>\n  <td style=\"color:#e8e8ec;word-break:break-all;\">{{ r.value }}</td>\n  <td style=\"color:#b9b9c4;text-transform:uppercase;\">{{ r.type }}</td>\n  <td style=\"color:{% if r.verdict == 'KEEP' %}#ff6b6b{% elif r.verdict == 'REVIEW' %}#ffd479{% else %}#7ee0b0{% endif %};\"><b>{{ r.verdict }}</b></td>\n  <td style=\"color:#e8e8ec;text-align:center;\">{% if r.abuse_applies %}{{ r.abuse_score }}%{% else %}n/a{% endif %}</td>\n  <td style=\"color:#e8e8ec;text-align:center;\">{{ r.fortiguard_confidence | default('-', true) }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.blocked_on }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.firewall }}</td>\n  <td style=\"color:#e8e8ec;\">{{ r.ticket }}</td>\n</tr>\n{% endfor %}\n</table>\n\n<h3 style=\"background:#2b2b3d;color:#fff;padding:5px 8px;margin:14px 0 0;\">Your decision</h3>\n<table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" style=\"border-collapse:collapse;font-size:12px;width:100%;border-color:#444;\">\n<tr>\n  <td style=\"background:#1e4032;color:#7ee0b0;width:200px;\"><b>REMOVE CLEAN INDICATORS</b></td>\n  <td style=\"background:#1e4032;color:#c9f0dc;\">Proceed with unblocking only the {{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }} indicator(s) under SAFE TO REMOVE. Anything held back for review is left untouched.</td>\n</tr>\n<tr>\n  <td style=\"background:#4a2328;color:#ff9b9b;\"><b>KEEP INDICATORS</b></td>\n  <td style=\"background:#4a2328;color:#f0c9c9;\">Change nothing. Choose this if any candidate still looks risky to you, if the threshold needs adjusting, or if a block is contractual rather than reputation-driven.</td>\n</tr>\n</table>\n\n<p style=\"color:#8a8a99;font-size:11px;margin-top:12px;\">\nThreshold {{ vars.abuse_threshold }}% &middot; FortiGuard hold-back {{ vars.fortiguard_override }} &middot;\ntypes {{ vars.enabled_types }} &middot; mode {{ vars.containment_mode }} &middot; batch of {{ vars.steps.Evaluate_Against_Threshold.data['code_output']['total'] }}.\nRemoval is a dummy step in this version &mdash; no record is deleted either way.\n</p>\n\n</div>\n",
+                    "inputVariables": []
+                  }
+                },
+                "record": "",
+                "agent_id": null,
+                "resources": "s_b_m_blocked_i_ps",
+                "is_approval": false,
+                "owner_detail": {
+                  "isAssigned": false,
+                  "emailRecipients": ""
+                },
+                "isRecordLinked": false,
+                "step_variables": [],
+                "response_mapping": {
+                  "options": [
+                    {
+                      "option": "Keep Indicators",
+                      "primary": false,
+                      "step_iri": "/api/3/workflow_steps/1f46ff01-355c-4a09-8fb4-0105b72dd9a9"
+                    },
+                    {
+                      "option": "Remove Clean Indicators",
+                      "primary": true,
+                      "step_iri": "/api/3/workflow_steps/a7983900-3d49-4b89-b34f-00a0c92ff659"
+                    }
+                  ],
+                  "duplicateOption": false,
+                  "customSuccessMessage": "Decision recorded."
+                },
+                "email_notification": {
+                  "enabled": false,
+                  "smtpParameters": []
+                },
+                "customEmailExternal": false,
+                "inline_channel_list": [],
+                "external_channel_list": [],
+                "unauthenticated_input": false,
+                "external_email_subject": null,
+                "internal_email_subject": "FortiSOAR: blocked IP revalidation needs your decision",
+                "custom_email_body_external": null,
+                "external_email_attachments": null
+              },
+              "status": null,
+              "top": "1090",
+              "left": "300",
+              "stepType": "/api/3/workflow_step_types/fc04082a-d7dc-4299-96fb-6837b1baa0fe",
+              "group": null,
+              "uuid": "d5bf3a5b-c57d-4ca1-9d07-106465eec8a5"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Keep Indicators",
+              "description": "DUMMY STEP - records the decision only.",
+              "arguments": {
+                "action_taken": "KEEP_ALL",
+                "action_detail": "Analyst chose to keep every indicator in this batch. No record was modified.",
+                "removed_count": 0
+              },
+              "status": null,
+              "top": "1240",
+              "left": "80",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "1f46ff01-355c-4a09-8fb4-0105b72dd9a9"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Remove Clean Indicators",
+              "description": "DUMMY STEP - this is where a real removal would go.",
+              "arguments": {
+                "action_taken": "REMOVE_CLEAN",
+                "action_detail": "SIMULATED removal of {{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }} indicator(s) in the SAFE TO REMOVE bucket. No record was deleted - replace this step with a Delete Record or Update Record step once the workflow is signed off.",
+                "removed_count": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }}"
+              },
+              "status": null,
+              "top": "1240",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "a7983900-3d49-4b89-b34f-00a0c92ff659"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "No Indicators Found",
+              "description": "Nothing to review - the run still produces a result.",
+              "arguments": {
+                "action_taken": "NO_ACTION",
+                "action_detail": "The batch contained no usable IPv4 indicators, so there was nothing to review.",
+                "removed_count": 0
+              },
+              "status": null,
+              "top": "1090",
+              "left": "1120",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "d1016fad-de3d-4523-84f0-4ea3348efb1c"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Build Result",
+              "description": "Single result contract. Everything a later step, ticket or report needs is under vars.result - no walking back through step outputs.",
+              "arguments": {
+                "result": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['result'] }}",
+                "action_taken": "{{ vars.action_taken }}",
+                "action_detail": "{{ vars.action_detail }}",
+                "keep_count": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['keep_count'] }}",
+                "clean_count": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }}",
+                "review_count": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['review_count'] }}",
+                "threshold_used": "{{ vars.abuse_threshold }}",
+                "removed_count": "{{ vars.removed_count }}"
+              },
+              "status": null,
+              "top": "1390",
+              "left": "560",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "74392c0b-9d7c-46de-8bb0-d3ff74cf36d6"
+            }
+          ],
+          "routes": [
+            {
+              "@type": "WorkflowRoute",
+              "name": "Start -> Configuration",
+              "targetStep": "/api/3/workflow_steps/34fe2880-a516-499c-9982-662f1b997c06",
+              "sourceStep": "/api/3/workflow_steps/d86ebd35-4d4f-453d-8219-5874ef59f0f1",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "c0d32e04-9aa2-4270-8718-8e1d5903dc1d"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Configuration -> Find Blocked IPs",
+              "targetStep": "/api/3/workflow_steps/4f85bffb-0e36-4403-8ff2-f20a4aa5fc91",
+              "sourceStep": "/api/3/workflow_steps/34fe2880-a516-499c-9982-662f1b997c06",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "53ff3eb2-9a69-44e3-94a2-9d2fe478d849"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Find Blocked IPs -> Extract Indicators",
+              "targetStep": "/api/3/workflow_steps/e6687a70-4612-4f5b-996f-894a75b1018a",
+              "sourceStep": "/api/3/workflow_steps/4f85bffb-0e36-4403-8ff2-f20a4aa5fc91",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "6f2fa6f0-1ad5-4a2b-b69d-ec5d01f31e3b"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Extract Indicators -> Enrich AbuseIPDB",
+              "targetStep": "/api/3/workflow_steps/fc9652a4-536c-4f4a-8ff3-13bfae930d8d",
+              "sourceStep": "/api/3/workflow_steps/e6687a70-4612-4f5b-996f-894a75b1018a",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "10ae1143-ffaf-43c6-aa60-bad181592988"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Extract Indicators -> Enrich FortiGuard",
+              "targetStep": "/api/3/workflow_steps/062ef473-8aed-4ec8-8241-7318ab8ce454",
+              "sourceStep": "/api/3/workflow_steps/e6687a70-4612-4f5b-996f-894a75b1018a",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "3c27a921-be16-467e-8d64-6ba547cbc467"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Enrich AbuseIPDB -> Evaluate Against Threshold",
+              "targetStep": "/api/3/workflow_steps/67999a7e-560b-43a8-a689-38ba97545fc5",
+              "sourceStep": "/api/3/workflow_steps/fc9652a4-536c-4f4a-8ff3-13bfae930d8d",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "e3c23fd9-5bd1-4206-b7af-2a8e36e060b4"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Enrich FortiGuard -> Evaluate Against Threshold",
+              "targetStep": "/api/3/workflow_steps/67999a7e-560b-43a8-a689-38ba97545fc5",
+              "sourceStep": "/api/3/workflow_steps/062ef473-8aed-4ec8-8241-7318ab8ce454",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "bf64f092-6db4-402f-9770-ef710c3a2895"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Evaluate Against Threshold -> Any Indicators Found",
+              "targetStep": "/api/3/workflow_steps/3f9dbbdb-55a1-49fe-9e8f-636e98b92c0f",
+              "sourceStep": "/api/3/workflow_steps/67999a7e-560b-43a8-a689-38ba97545fc5",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "85e9f38c-0db0-4341-8b60-49c16afe98ff"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Any Indicators Found -> Analyst Review",
+              "targetStep": "/api/3/workflow_steps/d5bf3a5b-c57d-4ca1-9d07-106465eec8a5",
+              "sourceStep": "/api/3/workflow_steps/3f9dbbdb-55a1-49fe-9e8f-636e98b92c0f",
+              "label": "Indicators to review",
+              "isExecuted": false,
+              "group": null,
+              "uuid": "e0e33d3b-3285-4221-b1a7-1ae888ec05dd"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Any Indicators Found -> No Indicators Found",
+              "targetStep": "/api/3/workflow_steps/d1016fad-de3d-4523-84f0-4ea3348efb1c",
+              "sourceStep": "/api/3/workflow_steps/3f9dbbdb-55a1-49fe-9e8f-636e98b92c0f",
+              "label": "Nothing to review",
+              "isExecuted": false,
+              "group": null,
+              "uuid": "77689658-03f6-4f65-8a2a-45589d8c6d0b"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Analyst Review -> Keep Indicators",
+              "targetStep": "/api/3/workflow_steps/1f46ff01-355c-4a09-8fb4-0105b72dd9a9",
+              "sourceStep": "/api/3/workflow_steps/d5bf3a5b-c57d-4ca1-9d07-106465eec8a5",
+              "label": "Keep Indicators",
+              "isExecuted": false,
+              "group": null,
+              "uuid": "b4136141-9ac2-4c7f-9cc0-272f5d707dd2"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Analyst Review -> Remove Clean Indicators",
+              "targetStep": "/api/3/workflow_steps/a7983900-3d49-4b89-b34f-00a0c92ff659",
+              "sourceStep": "/api/3/workflow_steps/d5bf3a5b-c57d-4ca1-9d07-106465eec8a5",
+              "label": "Remove Clean Indicators",
+              "isExecuted": false,
+              "group": null,
+              "uuid": "6d0d8d17-d239-4d6e-b898-e4c514b1d413"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Keep Indicators -> Build Result",
+              "targetStep": "/api/3/workflow_steps/74392c0b-9d7c-46de-8bb0-d3ff74cf36d6",
+              "sourceStep": "/api/3/workflow_steps/1f46ff01-355c-4a09-8fb4-0105b72dd9a9",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "53393337-daa1-4767-bfd5-94d1d7f52792"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Remove Clean Indicators -> Build Result",
+              "targetStep": "/api/3/workflow_steps/74392c0b-9d7c-46de-8bb0-d3ff74cf36d6",
+              "sourceStep": "/api/3/workflow_steps/a7983900-3d49-4b89-b34f-00a0c92ff659",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "7c3f53ac-ad0f-45cc-a127-c23f577865af"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "No Indicators Found -> Build Result",
+              "targetStep": "/api/3/workflow_steps/74392c0b-9d7c-46de-8bb0-d3ff74cf36d6",
+              "sourceStep": "/api/3/workflow_steps/d1016fad-de3d-4523-84f0-4ea3348efb1c",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "c5f64fe1-4266-465c-8ff3-a90f258bf83e"
+            }
+          ],
+          "groups": [],
+          "priority": "/api/3/picklists/2b563c61-ae2c-41c0-a85a-c9709585e3f2",
+          "playbookOrigin": "/api/3/picklists/15c1e8c9-22bf-4e66-8fbb-0a502d4a4a3f",
+          "isEditable": true,
+          "uuid": "656e0597-3233-4838-80a8-fb579cb1dcf9",
+          "owners": [],
+          "isPrivate": false,
+          "deletedAt": null,
+          "importedBy": [],
+          "recordTags": []
+        }
+      ]
+    }
+  ],
+  "exported_tags": [
+    "SOC-Hygiene"
+  ]
+}

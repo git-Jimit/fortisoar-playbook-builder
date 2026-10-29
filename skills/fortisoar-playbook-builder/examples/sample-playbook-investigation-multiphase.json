@@ -1,0 +1,637 @@
+{
+  "type": "workflow_collections",
+  "data": [
+    {
+      "@context": "/api/3/contexts/WorkflowCollection",
+      "@type": "WorkflowCollection",
+      "name": "Malware Investigation",
+      "description": null,
+      "visible": true,
+      "image": null,
+      "uuid": "7bb6f918-31be-49a3-9a1e-e1ace16b3d9d",
+      "id": 168,
+      "createDate": 1746160701.716957,
+      "modifyDate": 1747892793.100484,
+      "deletedAt": null,
+      "importedBy": [],
+      "recordTags": [],
+      "workflows": [
+        {
+          "@type": "Workflow",
+          "triggerLimit": null,
+          "name": "Malware Investigation - Unknown File Extension & DNS [Scheduled]",
+          "aliasName": null,
+          "tag": null,
+          "description": "EXAMPLE - multi-phase investigation pattern. A narrow set of triggers identifies machines worth examining; each candidate is then queried again with no suspicion filter and written up as a case file; indicators are reputation-checked; the workflow ends with a block-ready list. Code snippets are trimmed to their leading comment and return shape - the structure, wiring, step variables, routing and for_each references are complete and accurate. Use this as the reference for how a multi-phase playbook is assembled, not as a runnable playbook.",
+          "isActive": true,
+          "debug": true,
+          "singleRecordExecution": false,
+          "remoteExecutableFlag": false,
+          "parameters": [],
+          "synchronous": false,
+          "lastModifyDate": 1786597142,
+          "collection": "/api/3/workflow_collections/7bb6f918-31be-49a3-9a1e-e1ace16b3d9d",
+          "versions": [],
+          "triggerStep": "/api/3/workflow_steps/6c56c727-79bf-4c6b-8957-ca9deef2bbfd",
+          "steps": [
+            {
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "description": null,
+              "arguments": {
+                "route": "d9850c6d-9d0d-4631-b8f4-0b5af960bd5b",
+                "resources": [
+                  "alerts"
+                ],
+                "__triggerLimit": true,
+                "inputVariables": [],
+                "step_variables": {
+                  "input": {
+                    "params": [],
+                    "records": "{{vars.input.records}}"
+                  }
+                },
+                "triggerOnSource": true,
+                "displayConditions": {
+                  "alerts": {
+                    "sort": [],
+                    "limit": 30,
+                    "logic": "AND",
+                    "filters": []
+                  }
+                },
+                "executeButtonText": "Run Malware Investigation",
+                "noRecordExecution": true,
+                "showToasterMessage": {
+                  "visible": false,
+                  "messageVisible": true
+                },
+                "triggerOnReplicate": false,
+                "singleRecordExecution": false
+              },
+              "status": null,
+              "top": "190",
+              "left": "125",
+              "stepType": "/api/3/workflow_step_types/f414d039-bb0d-4e59-9c39-a8f1e880b18a",
+              "group": null,
+              "uuid": "6c56c727-79bf-4c6b-8957-ca9deef2bbfd"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "CONFIG",
+              "description": "EDIT THIS STEP ONLY. customer = FortiSIEM organization name. lookback_hours = sweep window. enabled_tactics / enabled_ttps = ALL, or a comma list e.g. 'Impact,Execution' or 'T1490,T1486'. min_score_to_alert = weighted score above which an alert is raised.",
+              "arguments": {
+                "customer": "example.org",
+                "lookback_hours": "24",
+                "dns_window_hours": "4",
+                "enabled_triggers": "ALL",
+                "max_hosts_to_investigate": "3",
+                "max_rows_per_query": "200",
+                "report_recipient": ""
+              },
+              "status": null,
+              "top": "120",
+              "left": "500",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "1ba667f3-f6fa-4a79-9e31-35b80692f972"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Detect_Plan",
+              "description": "Turns raw query rows into per-technique verdicts, a kill-chain view and a weighted score.",
+              "arguments": {
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "python_function": "import json\ntrue, false, null = True, False, None\n\n# PHASE 1 - build the trigger plan.\n#\n# Deliberately narrow: this asks only \"is there a machine worth examining?\",\n# not \"does anything suspicious exist anywhere\". Each trigger names the field\n# carrying the entity and the field carrying an indicator, so later phases need\n# no per-trigger special cases.\n#\n# Triggers that send an IDENTICAL cond/groupby/AttrList/window are collapsed\n# into one query here and share a result - two DNS triggers differing only in\n# post-processing were otherwise scanning 47M rows twice.\n#\n# Full implementation trimmed for this example. Structure:\n#\n#   TRIGGERS = {\n#     \"T-DNS-RISKTLD\": {\n#        \"name\": ..., \"why\": ...,            # why-text is surfaced in the report\n#        \"cond\": '(eventType = \"...\")',\n#        \"groupby\": \"DNSInitiatorIP,DNSQNAME\",\n#        \"AttrList\": \"DNSInitiatorIP,DNSQNAME,COUNT(*)\",\n#        \"host_field\": \"DNSInitiatorIP\",     # what identifies the machine\n#        \"ioc_field\": \"DNSQNAME\",            # what can be blocked\n#        \"ioc_kind\": \"domain\",\n#        \"post\": \"tld\",                      # judged after the query, not in it\n#        \"hours\": 4, \"weight\": 5,\n#        \"corroborating_only\": False,        # True = adds weight, never starts a case\n#     }, ...\n#   }\n\n# ... implementation trimmed ...\n\nprint(json.dumps({\n    \"plan\": plan, \"plan_size\": len(plan),\n    \"queries\": queries, \"query_count\": len(queries),\n    \"queries_saved\": len(plan) - len(queries),\n    \"customer\": customer, \"from_time\": from_t, \"to_time\": to_t,\n    \"lookback_hours\": hours,\n}))\n"
+                },
+                "version": "2.1.4",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": {
+                  "detect_meta": "{{ vars.steps.Detect_Plan.data['code_output'] }}"
+                }
+              },
+              "status": null,
+              "top": "300",
+              "left": "500",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "ba3c5cfd-a840-4977-bf2c-6bd20653898a"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Run_Detect",
+              "description": "One step covers every technique. Adding a TTP needs no change here - only in Build_Query_Plan.",
+              "arguments": {
+                "name": "Fortinet FortiSIEM",
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "to": "{{vars.item.to_time}}",
+                  "cond": "{{vars.item.cond}}",
+                  "from": "{{vars.item.from_time}}",
+                  "start": 0,
+                  "groupby": "{{vars.item.groupby}}",
+                  "orderby": "COUNT(*) DESC",
+                  "perPage": "{{vars.item.perPage}}",
+                  "AttrList": "{{vars.item.AttrList}}",
+                  "query_type": "Basic Query",
+                  "time_selection": "Absolute Time"
+                },
+                "version": "6.1.1",
+                "for_each": {
+                  "item": "{{vars.detect_meta['queries']}}",
+                  "parallel": false,
+                  "condition": ""
+                },
+                "connector": "fortinet-fortisiem",
+                "operation": "run_report",
+                "operationTitle": "Run Advanced Search Query",
+                "pickFromTenant": false,
+                "step_variables": {
+                  "detect_results": "{{ vars.steps.Run_Detect }}"
+                },
+                "ignore_errors": true
+              },
+              "status": null,
+              "top": "300",
+              "left": "900",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "uuid": "4f5ba634-1ee1-402d-8aa5-4a554de3f32f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Find_Candidates",
+              "description": "Turns raw query rows into per-technique verdicts, a kill-chain view and a weighted score.",
+              "arguments": {
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "python_function": "import json\ntrue, false, null = True, False, None\n\n# PHASE 2 - fold trigger hits onto the MACHINE that produced them, and build\n# the deep-dive plan.\n#\n# Two things happen here that make the pattern work:\n#\n# 1. post-processing the SIEM cannot express - TLD suffix matching, label\n#    randomness, unknown-extension classification. CONTAIN is a substring test,\n#    so anything needing a suffix or numeric comparison belongs in Python.\n#\n# 2. ONE pivot query per area covering EVERY candidate, not one per host. Six\n#    areas across five hosts is 6 queries, not 30. The entity field is in the\n#    grouping, so rows are split by host afterwards.\n#\n# A relay pivot is also built: for each suspicious domain, ask the DNS logs\n# which machines actually queried it. Network controls report the device that\n# forwarded the query, which on a DNS server is every client behind it.\n\n# ... implementation trimmed ...\n\nprint(json.dumps({\n    \"triggered\": triggered,          # per-trigger result, for the report\n    \"candidates\": cand_list,\n    \"investigate\": investigate,      # top N by score\n    \"pivot_a\": pivot_a, \"pivot_b\": pivot_b,   # sharded across two steps\n    \"has_candidates\": len(investigate) > 0,\n    \"window\": window, \"customer\": customer,\n}))\n"
+                },
+                "version": "2.1.4",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": {
+                  "cand_meta": "{{ vars.steps.Find_Candidates.data['code_output'] }}"
+                }
+              },
+              "status": null,
+              "top": "300",
+              "left": "1300",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "0e359a9a-5bb0-468a-a549-d8d2bb1a36ea"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "check_candidates",
+              "description": null,
+              "arguments": {
+                "conditions": [
+                  {
+                    "option": "yes",
+                    "step_iri": "/api/3/workflow_steps/94d2c07b-2db9-42de-a03f-b3ee356f0d59",
+                    "step_name": "br_investigate",
+                    "condition": "{{ vars.cand_meta['has_candidates'] }}"
+                  },
+                  {
+                    "option": "no",
+                    "default": true,
+                    "step_iri": "/api/3/workflow_steps/e5778ec3-c567-4841-871f-49c57505f19f",
+                    "step_name": "br_nothing"
+                  }
+                ],
+                "step_variables": []
+              },
+              "status": null,
+              "top": "300",
+              "left": "1700",
+              "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
+              "group": null,
+              "uuid": "1f51bae3-9e7f-49e6-b9e3-800fa4a689f6"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "br_investigate",
+              "description": "No-op branch marker. Detach the link to the next step to test this branch in isolation.",
+              "arguments": {
+                "params": {},
+                "step_variables": []
+              },
+              "status": null,
+              "top": "200",
+              "left": "2050",
+              "stepType": "/api/3/workflow_step_types/0109f35d-090b-4a2b-bd8a-94cbc3508562",
+              "group": null,
+              "uuid": "94d2c07b-2db9-42de-a03f-b3ee356f0d59"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "br_nothing",
+              "description": "No-op branch marker. Detach the link to the next step to test this branch in isolation.",
+              "arguments": {
+                "params": {},
+                "step_variables": []
+              },
+              "status": null,
+              "top": "420",
+              "left": "2050",
+              "stepType": "/api/3/workflow_step_types/0109f35d-090b-4a2b-bd8a-94cbc3508562",
+              "group": null,
+              "uuid": "e5778ec3-c567-4841-871f-49c57505f19f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Run_Pivot_A",
+              "description": "One step covers every technique. Adding a TTP needs no change here - only in Build_Query_Plan.",
+              "arguments": {
+                "name": "Fortinet FortiSIEM",
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "to": "{{vars.item.to_time}}",
+                  "cond": "{{vars.item.cond}}",
+                  "from": "{{vars.item.from_time}}",
+                  "start": 0,
+                  "groupby": "{{vars.item.groupby}}",
+                  "orderby": "COUNT(*) DESC",
+                  "perPage": "{{vars.item.perPage}}",
+                  "AttrList": "{{vars.item.AttrList}}",
+                  "query_type": "Basic Query",
+                  "time_selection": "Absolute Time"
+                },
+                "version": "6.1.1",
+                "for_each": {
+                  "item": "{{vars.cand_meta['pivot_a']}}",
+                  "parallel": false,
+                  "condition": ""
+                },
+                "connector": "fortinet-fortisiem",
+                "operation": "run_report",
+                "operationTitle": "Run Advanced Search Query",
+                "pickFromTenant": false,
+                "step_variables": {
+                  "pivot_a_results": "{{ vars.steps.Run_Pivot_A }}"
+                },
+                "ignore_errors": true
+              },
+              "status": null,
+              "top": "200",
+              "left": "2400",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "uuid": "9714767d-ceb0-44aa-badf-6afe4bf2cc08"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Build_Cases",
+              "description": "Turns raw query rows into per-technique verdicts, a kill-chain view and a weighted score.",
+              "arguments": {
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "python_function": "import json\ntrue, false, null = True, False, None\n\n# PHASE 3 - assemble a case file per machine.\n#\n# The pivot queries carry NO suspicion filter. Their results are assessed here,\n# in the context of a machine already under suspicion - which is what lets\n# ordinary activity read as notable. rundll32 is unremarkable estate-wide and\n# notable on a host that just resolved a generated domain.\n#\n# Rows are attributed back to a host by whichever address field the source\n# populates: reptDevIpAddr for process and file events, DNSInitiatorIP for DNS,\n# srcIpAddr for network controls. Matching hostName against an IP never works.\n#\n# File hashes seen on notable files are collected for reputation checking.\n\n# ... implementation trimmed ...\n\nprint(json.dumps({\n    \"cases\": cases, \"case_count\": len(cases),\n    \"triggered\": triggered, \"relay_trace\": relay_trace,\n    \"iocs\": all_iocs, \"has_iocs\": len(all_iocs) > 0,\n    \"pivot_missing\": pivot_missing, \"pivot_note\": pivot_note,\n    \"window\": window, \"customer\": customer,\n}))\n"
+                },
+                "version": "2.1.4",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": {
+                  "investigation": "{{ vars.steps.Build_Cases.data['code_output'] }}"
+                }
+              },
+              "status": null,
+              "top": "200",
+              "left": "2800",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "501b2b6d-3ebf-44f6-9aa7-b69cee4d285a"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Reputation_Lookup",
+              "uuid": "f1e0e235-b824-4ed3-846c-8f271dee9333",
+              "description": null,
+              "status": null,
+              "top": "200",
+              "left": "3200",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "left_offset": null,
+              "top_offset": null,
+              "arguments": {
+                "name": "Fortinet FortiGuard Threat Intelligence",
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "indicator": "{{vars.item.indicator}}"
+                },
+                "version": "4.2.0",
+                "for_each": {
+                  "item": "{{vars.investigation['iocs']}}",
+                  "parallel": false,
+                  "condition": ""
+                },
+                "connector": "fortinet-fortiguard-threat-intelligence",
+                "operation": "threat_intel_search",
+                "operationTitle": "Threat Intel Search",
+                "pickFromTenant": false,
+                "step_variables": {
+                  "fg_results": "{{ vars.steps.Reputation_Lookup }}"
+                },
+                "ignore_errors": true
+              }
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Assess",
+              "description": "Turns raw query rows into per-technique verdicts, a kill-chain view and a weighted score.",
+              "arguments": {
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "python_function": "import json\ntrue, false, null = True, False, None\n\n# PHASE 4 - reputation verdict, case verdict, and the block list.\n#\n# Reputation returns a rating, a not-found message, or nothing at all. All\n# three are distinct: nothing at all means the lookup FAILED and must not read\n# as a clean result.\n#\n# The verdict comes from the strongest single machine, never an estate total.\n# A machine surfaced only by the relay trace can outrank every candidate - it\n# queried the domains most and no trigger reached it, which is exactly the case\n# a sweep misses.\n#\n# Only externally-rated indicators reach the block list. Behavioural findings\n# go to a review list for an analyst to confirm.\n\n# ... implementation trimmed ...\n\nprint(json.dumps({\n    \"verdict\": verdict, \"severity\": severity, \"verdict_reason\": reason,\n    \"cases\": cases, \"enrichment\": enriched,\n    \"ioc_malicious\": n_mal, \"ioc_suspicious\": n_susp, \"ioc_no_response\": n_none,\n    \"enrichment_ok\": (n_none == 0),\n    \"block_domains\": block_domains,       # consumed by a blocking playbook\n    \"block_ips\": block_ips,\n    \"block_hashes\": block_hashes,\n    \"block_ready\": (len(block_domains) + len(block_ips) + len(block_hashes)) > 0,\n    \"review_indicators\": review,          # NOT auto-blocked\n    \"lead_host\": lead_host,\n    \"uninvestigated_askers\": uninvestigated,\n}))\n"
+                },
+                "version": "2.1.4",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": {
+                  "assessed": "{{ vars.steps.Assess.data['code_output'] }}"
+                }
+              },
+              "status": null,
+              "top": "200",
+              "left": "3600",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "3a1b383c-41f8-4896-8c03-69aabe0a13d4"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Build_Report",
+              "description": "Turns raw query rows into per-technique verdicts, a kill-chain view and a weighted score.",
+              "arguments": {
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "python_function": "import json\ntrue, false, null = True, False, None\n\n# PHASE 5 - the analyst-facing report.\n#\n# Order matters. Verdict and reasoning first, then a plain-language statement\n# of what was found - or an explicit statement that nothing was. Then a case\n# file per machine, then indicators, then the block list.\n#\n# Every finding carries three lines: how to verify it, what would make it\n# legitimate, and what would confirm it. The middle one is what lets an analyst\n# close something.\n#\n# Attribute names are translated for display (procName -> Process, DNSQNAME ->\n# Domain queried). The query that produced each finding is included small and\n# last, so it can be reproduced without competing with the finding itself.\n\n# ... implementation trimmed ...\n\nprint(json.dumps({\n    \"report_html\": html,\n    \"verdict\": verdict, \"severity\": severity,\n    \"block_domains\": block_domains, \"block_ips\": block_ips,\n    \"block_hashes\": block_hashes, \"block_ready\": block_ready,\n    \"pdf_file_name\": pdf_name,\n}))\n"
+                },
+                "version": "2.1.4",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": {
+                  "report": "{{ vars.steps.Build_Report.data['code_output'] }}"
+                }
+              },
+              "status": null,
+              "top": "200",
+              "left": "4000",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "c706a4c9-acd1-411e-9fa6-1feef6f6849e"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "set_result",
+              "description": null,
+              "arguments": {
+                "Result": "{{ vars.assessed }}",
+                "BlockDomains": "{{ vars.assessed['block_domains'] }}",
+                "BlockIPs": "{{ vars.assessed['block_ips'] }}",
+                "BlockHashes": "{{ vars.assessed['block_hashes'] }}",
+                "BlockReady": "{{ vars.assessed['block_ready'] }}",
+                "Report": "{{ vars.report['report_html'] }}"
+              },
+              "status": null,
+              "top": "200",
+              "left": "4400",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "df34598e-748c-484d-982c-aa33a9444c7f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "set_result_nothing",
+              "description": null,
+              "arguments": {
+                "Result": "{{ vars.cand_meta }}",
+                "BlockReady": "false"
+              },
+              "status": null,
+              "top": "420",
+              "left": "2400",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "dfb8e7df-ca1e-448a-ad67-65eeb1005366"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Run_Pivot_B",
+              "description": "One step covers every technique. Adding a TTP needs no change here - only in Build_Query_Plan.",
+              "arguments": {
+                "name": "Fortinet FortiSIEM",
+                "config": "<SET_CONNECTOR_CONFIG_UUID>",
+                "params": {
+                  "to": "{{vars.item.to_time}}",
+                  "cond": "{{vars.item.cond}}",
+                  "from": "{{vars.item.from_time}}",
+                  "start": 0,
+                  "groupby": "{{vars.item.groupby}}",
+                  "orderby": "COUNT(*) DESC",
+                  "perPage": "{{vars.item.perPage}}",
+                  "AttrList": "{{vars.item.AttrList}}",
+                  "query_type": "Basic Query",
+                  "time_selection": "Absolute Time"
+                },
+                "version": "6.1.1",
+                "for_each": {
+                  "item": "{{vars.cand_meta['pivot_b']}}",
+                  "parallel": false,
+                  "condition": ""
+                },
+                "connector": "fortinet-fortisiem",
+                "operation": "run_report",
+                "operationTitle": "Run Advanced Search Query",
+                "pickFromTenant": false,
+                "step_variables": {
+                  "pivot_b_results": "{{ vars.steps.Run_Pivot_B }}"
+                },
+                "ignore_errors": true
+              },
+              "status": null,
+              "top": "680",
+              "left": "2600",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "uuid": "ff43cb91-0fc2-435a-8a59-c7deb914a6b4"
+            }
+          ],
+          "routes": [
+            {
+              "@type": "WorkflowRoute",
+              "name": "Start -> CONFIG",
+              "targetStep": "/api/3/workflow_steps/1ba667f3-f6fa-4a79-9e31-35b80692f972",
+              "sourceStep": "/api/3/workflow_steps/6c56c727-79bf-4c6b-8957-ca9deef2bbfd",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "bfcc0f29-9c7c-4dee-bed7-90dc10ed1e47"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "CONFIG -> Detect_Plan",
+              "targetStep": "/api/3/workflow_steps/ba3c5cfd-a840-4977-bf2c-6bd20653898a",
+              "sourceStep": "/api/3/workflow_steps/1ba667f3-f6fa-4a79-9e31-35b80692f972",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "59e8690d-8548-4a46-b2bb-442f2cf5c074"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Detect_Plan -> Run_Detect",
+              "targetStep": "/api/3/workflow_steps/4f5ba634-1ee1-402d-8aa5-4a554de3f32f",
+              "sourceStep": "/api/3/workflow_steps/ba3c5cfd-a840-4977-bf2c-6bd20653898a",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "0f0621bb-0fb2-445e-920b-e1fe82165fe4"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Run_Detect -> Find_Candidates",
+              "targetStep": "/api/3/workflow_steps/0e359a9a-5bb0-468a-a549-d8d2bb1a36ea",
+              "sourceStep": "/api/3/workflow_steps/4f5ba634-1ee1-402d-8aa5-4a554de3f32f",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "082efa9f-7dc9-49b8-9a9c-6ddfebe833d2"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Find_Candidates -> check_candidates",
+              "targetStep": "/api/3/workflow_steps/1f51bae3-9e7f-49e6-b9e3-800fa4a689f6",
+              "sourceStep": "/api/3/workflow_steps/0e359a9a-5bb0-468a-a549-d8d2bb1a36ea",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "0f6b4cb1-9f54-4497-926e-08d2334f455b"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "check_candidates -> br_investigate",
+              "targetStep": "/api/3/workflow_steps/94d2c07b-2db9-42de-a03f-b3ee356f0d59",
+              "sourceStep": "/api/3/workflow_steps/1f51bae3-9e7f-49e6-b9e3-800fa4a689f6",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "96045d92-cb1f-435e-adce-7ad49dee33a6"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "check_candidates -> br_nothing",
+              "targetStep": "/api/3/workflow_steps/e5778ec3-c567-4841-871f-49c57505f19f",
+              "sourceStep": "/api/3/workflow_steps/1f51bae3-9e7f-49e6-b9e3-800fa4a689f6",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "bf0799bd-cac7-4199-b6c3-18932379b53b"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "br_nothing -> set_result_nothing",
+              "targetStep": "/api/3/workflow_steps/dfb8e7df-ca1e-448a-ad67-65eeb1005366",
+              "sourceStep": "/api/3/workflow_steps/e5778ec3-c567-4841-871f-49c57505f19f",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "3ca059a4-6cb7-4278-b9fc-ed0e22935d71"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "br_investigate -> Run_Pivot_A",
+              "targetStep": "/api/3/workflow_steps/9714767d-ceb0-44aa-badf-6afe4bf2cc08",
+              "sourceStep": "/api/3/workflow_steps/94d2c07b-2db9-42de-a03f-b3ee356f0d59",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "4f6d789a-a8d0-496b-90cd-7541d9d3fe71"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Build_Cases -> Reputation_Lookup",
+              "targetStep": "/api/3/workflow_steps/f1e0e235-b824-4ed3-846c-8f271dee9333",
+              "sourceStep": "/api/3/workflow_steps/501b2b6d-3ebf-44f6-9aa7-b69cee4d285a",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "3caa6134-d258-4abe-b8f2-f0ba40b8752d"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Reputation_Lookup -> Assess",
+              "targetStep": "/api/3/workflow_steps/3a1b383c-41f8-4896-8c03-69aabe0a13d4",
+              "sourceStep": "/api/3/workflow_steps/f1e0e235-b824-4ed3-846c-8f271dee9333",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "776847d7-7ef5-4aea-97b6-2748e040eb4e"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Assess -> Build_Report",
+              "targetStep": "/api/3/workflow_steps/c706a4c9-acd1-411e-9fa6-1feef6f6849e",
+              "sourceStep": "/api/3/workflow_steps/3a1b383c-41f8-4896-8c03-69aabe0a13d4",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "6e9bd40f-2595-48a1-82f5-76c447ad36d0"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Build_Report -> set_result",
+              "targetStep": "/api/3/workflow_steps/df34598e-748c-484d-982c-aa33a9444c7f",
+              "sourceStep": "/api/3/workflow_steps/c706a4c9-acd1-411e-9fa6-1feef6f6849e",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "f1e1722b-d124-47ec-9123-d7f56bd1c842"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Run_Pivot_A -> Run_Pivot_B",
+              "targetStep": "/api/3/workflow_steps/ff43cb91-0fc2-435a-8a59-c7deb914a6b4",
+              "sourceStep": "/api/3/workflow_steps/9714767d-ceb0-44aa-badf-6afe4bf2cc08",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "6baf203b-86c8-46ab-a851-52dde65642b4"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Run_Pivot_B -> Build_Cases",
+              "targetStep": "/api/3/workflow_steps/501b2b6d-3ebf-44f6-9aa7-b69cee4d285a",
+              "sourceStep": "/api/3/workflow_steps/ff43cb91-0fc2-435a-8a59-c7deb914a6b4",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "6967677a-aba8-41e7-9aef-0a759bab7e1b"
+            }
+          ],
+          "groups": [],
+          "priority": "/api/3/picklists/2b563c61-ae2c-41c0-a85a-c9709585e3f2",
+          "playbookOrigin": "/api/3/picklists/15c1e8c9-22bf-4e66-8fbb-0a502d4a4a3f",
+          "isEditable": true,
+          "uuid": "e7d59836-72db-4042-b9af-1a4153aebc90",
+          "id": 7524,
+          "owners": [],
+          "isPrivate": false,
+          "deletedAt": null,
+          "importedBy": [],
+          "recordTags": []
+        }
+      ]
+    }
+  ],
+  "exported_tags": []
+}

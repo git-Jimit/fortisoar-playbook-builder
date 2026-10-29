@@ -1,0 +1,240 @@
+{
+  "type": "workflow_collections",
+  "data": [
+    {
+      "@context": "/api/3/contexts/WorkflowCollection",
+      "@type": "WorkflowCollection",
+      "name": "FortiSIEM Event Search",
+      "description": "Sample: fetch the events behind a FortiSIEM-ingested alert.",
+      "visible": true,
+      "image": null,
+      "uuid": "155f5ce9-cdfe-4236-a886-3f73ea219163",
+      "id": null,
+      "createDate": null,
+      "modifyDate": null,
+      "deletedAt": null,
+      "importedBy": [],
+      "recordTags": [],
+      "workflows": [
+        {
+          "@type": "Workflow",
+          "triggerLimit": null,
+          "name": "Associated Event Search",
+          "aliasName": null,
+          "tag": null,
+          "description": null,
+          "isActive": true,
+          "debug": true,
+          "singleRecordExecution": false,
+          "remoteExecutableFlag": false,
+          "parameters": [
+            "sourceData",
+            "incidentID"
+          ],
+          "synchronous": false,
+          "lastModifyDate": 1768197618,
+          "collection": "/api/3/workflow_collections/10637bdb-b459-4080-a054-57f05f5a3d8c",
+          "versions": [],
+          "triggerStep": "/api/3/workflow_steps/5bbc52a5-102b-4d92-9d70-3b7821a067fb",
+          "steps": [
+            {
+              "@type": "WorkflowStep",
+              "name": "checkAssociated Event Present",
+              "description": null,
+              "arguments": {
+                "conditions": [
+                  {
+                    "option": "no need to get",
+                    "step_iri": "/api/3/workflow_steps/91e8b693-69f9-4868-860a-3cb859a216fd",
+                    "condition": "{{ vars.sourceData | length == 2 }}",
+                    "step_name": "updateSourceData"
+                  },
+                  {
+                    "option": "get events",
+                    "default": true,
+                    "step_iri": "/api/3/workflow_steps/593b3687-2497-4f27-83ba-6682c4a78447",
+                    "step_name": "setdate"
+                  }
+                ],
+                "step_variables": []
+              },
+              "status": null,
+              "top": "220",
+              "left": "260",
+              "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
+              "group": null,
+              "uuid": "5ab5e746-76b4-4445-9668-9f281bc8d163"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "getEvents",
+              "description": null,
+              "arguments": {
+                "name": "Fortinet FortiSIEM",
+                "config": "",
+                "params": {
+                  "timeTo": "{{vars.steps.setdate.data['code_output']['to_time']}}",
+                  "perPage": 101,
+                  "timeFrom": "{{vars.steps.setdate.data['code_output']['from_time']}}",
+                  "incident_id": "{{vars.input.params.incidentID}}"
+                },
+                "version": "5.4.1",
+                "connector": "fortinet-fortisiem",
+                "operation": "get_associated_events",
+                "operationTitle": "Get Events For Incident",
+                "pickFromTenant": false,
+                "step_variables": []
+              },
+              "status": null,
+              "top": "120",
+              "left": "940",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
+              "group": null,
+              "uuid": "fd49f5b8-71bb-4354-8fc6-f884339ef0ca"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "setdate",
+              "description": null,
+              "arguments": {
+                "config": "",
+                "params": {
+                  "python_function": "from datetime import datetime, timezone\n\nincident = {{vars.sourceData}}\n\ndef parse_incident_time(raw_time_str):\n    # Extract the first 13-digit epoch (milliseconds)\n    epoch_ms = int(str(raw_time_str)[:13])\n    # Convert to datetime in UTC\n    dt = datetime.fromtimestamp(epoch_ms / 1000, tz=timezone.utc)\n    # Format as ISO 8601 with milliseconds\n    return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'\n\n# Parse from_time and to_time from respective fields\nfrom_time = parse_incident_time(incident.get(\"incidentFirstSeen\", \"\"))\nto_time = parse_incident_time(incident.get(\"incidentLastSeen\", \"\"))\n\n# Prepare final payload\noutput = {\n    \"event_id\": incident.get(\"incidentId\"),\n    \"from_time\": from_time,\n    \"to_time\": to_time\n}\n\nprint(output)\n"
+                },
+                "version": "2.1.1",
+                "connector": "code-snippet",
+                "operation": "python_inline_code_editor",
+                "operationTitle": "Execute Python Code",
+                "step_variables": []
+              },
+              "status": null,
+              "top": "120",
+              "left": "620",
+              "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
+              "group": null,
+              "uuid": "593b3687-2497-4f27-83ba-6682c4a78447"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "setSourceData",
+              "description": null,
+              "arguments": {
+                "SourceData": "{\n  \"incident_data\": {{vars.sourceData | toDict}},\n  \"associated_events\": {{vars.steps.getEvents.data}}\n}"
+              },
+              "status": null,
+              "top": "120",
+              "left": "1240",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "a764b86b-75bb-4d00-9242-4f62fa31749f"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "description": null,
+              "arguments": {
+                "__triggerLimit": true,
+                "step_variables": {
+                  "input": {
+                    "params": []
+                  },
+                  "sourceData": "{{vars.input.params.sourceData}}"
+                },
+                "triggerOnSource": true,
+                "triggerOnReplicate": false
+              },
+              "status": null,
+              "top": "120",
+              "left": "80",
+              "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62",
+              "group": null,
+              "uuid": "5bbc52a5-102b-4d92-9d70-3b7821a067fb"
+            },
+            {
+              "@type": "WorkflowStep",
+              "name": "updateSourceData",
+              "description": null,
+              "arguments": {
+                "SourceData": "{{vars.sourceData}}"
+              },
+              "status": null,
+              "top": "360",
+              "left": "620",
+              "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
+              "group": null,
+              "uuid": "91e8b693-69f9-4868-860a-3cb859a216fd"
+            }
+          ],
+          "routes": [
+            {
+              "@type": "WorkflowRoute",
+              "name": "checkAssiciated Event Present -> Copy of setSourceData",
+              "targetStep": "/api/3/workflow_steps/91e8b693-69f9-4868-860a-3cb859a216fd",
+              "sourceStep": "/api/3/workflow_steps/5ab5e746-76b4-4445-9668-9f281bc8d163",
+              "label": "no need to get",
+              "isExecuted": false,
+              "group": null,
+              "uuid": "ab27538e-8f08-42a5-aeac-7c5cc964cd9c"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "checkAssiciated Event Present -> setdate",
+              "targetStep": "/api/3/workflow_steps/593b3687-2497-4f27-83ba-6682c4a78447",
+              "sourceStep": "/api/3/workflow_steps/5ab5e746-76b4-4445-9668-9f281bc8d163",
+              "label": "get events",
+              "isExecuted": false,
+              "group": null,
+              "uuid": "8a632049-54a4-43fe-83ec-9ef5fba34df5"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "getEvents -> setSourceData",
+              "targetStep": "/api/3/workflow_steps/a764b86b-75bb-4d00-9242-4f62fa31749f",
+              "sourceStep": "/api/3/workflow_steps/fd49f5b8-71bb-4354-8fc6-f884339ef0ca",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "f69d8e8c-9cf8-4112-88c9-fe1ac5002a6a"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "setdate -> getEvents",
+              "targetStep": "/api/3/workflow_steps/fd49f5b8-71bb-4354-8fc6-f884339ef0ca",
+              "sourceStep": "/api/3/workflow_steps/593b3687-2497-4f27-83ba-6682c4a78447",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "5cdbb8a7-5cf2-495b-80df-155c840d15c5"
+            },
+            {
+              "@type": "WorkflowRoute",
+              "name": "Start -> checkAssiciated Event Present",
+              "targetStep": "/api/3/workflow_steps/5ab5e746-76b4-4445-9668-9f281bc8d163",
+              "sourceStep": "/api/3/workflow_steps/5bbc52a5-102b-4d92-9d70-3b7821a067fb",
+              "label": null,
+              "isExecuted": false,
+              "group": null,
+              "uuid": "fd2bbdd5-b8c4-40ca-aa53-78aafc66371e"
+            }
+          ],
+          "groups": [],
+          "priority": "/api/3/picklists/2b563c61-ae2c-41c0-a85a-c9709585e3f2",
+          "playbookOrigin": "/api/3/picklists/15c1e8c9-22bf-4e66-8fbb-0a502d4a4a3f",
+          "isEditable": true,
+          "uuid": "5c3a0bc6-a7cf-4392-9457-9b354d42b9d4",
+          "id": 2367,
+          "createUser": null,
+          "createDate": 1749966993.744301,
+          "modifyUser": null,
+          "modifyDate": 1768197571.574089,
+          "owners": [],
+          "isPrivate": false,
+          "deletedAt": null,
+          "importedBy": [],
+          "recordTags": []
+        }
+      ]
+    }
+  ],
+  "exported_tags": []
+}

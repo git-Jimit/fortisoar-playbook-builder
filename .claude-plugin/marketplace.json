@@ -1,0 +1,22 @@
+{
+  "name": "fortisoar-skills",
+  "owner": {
+    "name": "Jimit Patel"
+  },
+  "metadata": {
+    "description": "Claude skills for FortiSOAR playbook engineering."
+  },
+  "plugins": [
+    {
+      "name": "fortisoar-playbook-builder",
+      "source": "./",
+      "description": "Build, modify, validate and review FortiSOAR playbooks as complete, importable JSON exports.",
+      "version": "1.1.1",
+      "author": {
+        "name": "Jimit Patel"
+      },
+      "license": "MIT",
+      "category": "security"
+    }
+  ]
+}
