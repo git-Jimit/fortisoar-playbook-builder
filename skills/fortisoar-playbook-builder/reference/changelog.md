@@ -2,6 +2,12 @@
 
 Newest first. Each entry records what was measured, not only what changed.
 
+## 1.1.2 — directory listing details (2026-10-29)
+
+- Listing metadata: display name, documentation and support links, and a
+  privacy policy (the plugin collects no data). No change to how the skill
+  behaves.
+
 ## 1.1.1 — directory review fixes (2026-10-29)
 
 - Plain-text wording where the directory scan read a file path or command as

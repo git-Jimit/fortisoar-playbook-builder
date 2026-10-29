@@ -2,7 +2,7 @@
 name: "fortisoar-playbook-builder"
 description: Build, modify and review FortiSOAR playbooks as complete, importable JSON exports. Use this skill whenever the user wants a FortiSOAR playbook, workflow or automation — alert triage, incident response, investigation, IOC enrichment, phishing analysis, threat hunting, FortiSIEM or FortiAnalyzer queries, block/isolate response actions, client approval links (manual input), or PDF/HTML reports — even if they describe the logic in plain language without saying "playbook". Also use it to extend, debug, validate or review an existing FortiSOAR playbook export, to adapt a playbook for another client or tenant, or to wire sub-playbooks together.
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   author: Jimit Patel
 ---
 

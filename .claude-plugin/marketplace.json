@@ -11,7 +11,7 @@
       "name": "fortisoar-playbook-builder",
       "source": "./",
       "description": "Build, modify, validate and review FortiSOAR playbooks as complete, importable JSON exports.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "author": {
         "name": "Jimit Patel"
       },

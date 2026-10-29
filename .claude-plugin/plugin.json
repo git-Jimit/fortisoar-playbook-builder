@@ -1,12 +1,18 @@
 {
   "name": "fortisoar-playbook-builder",
-  "version": "1.1.1",
+  "displayName": "FortiSOAR Playbook Builder",
+  "version": "1.1.2",
   "description": "Build, modify, validate and review FortiSOAR playbooks as complete, importable JSON exports — triage, incident response, IOC enrichment, phishing, FortiSIEM queries, response actions and PDF/HTML reports.",
   "author": {
-    "name": "Jimit Patel"
+    "name": "Jimit Patel",
+    "url": "https://github.com/git-Jimit"
   },
   "homepage": "https://github.com/git-Jimit/fortisoar-playbook-builder",
   "repository": "https://github.com/git-Jimit/fortisoar-playbook-builder",
+  "documentationUrl": "https://github.com/git-Jimit/fortisoar-playbook-builder/blob/main/skills/fortisoar-playbook-builder/README.md",
+  "supportUrl": "https://github.com/git-Jimit/fortisoar-playbook-builder/issues",
+  "privacyPolicyUrl": "https://github.com/git-Jimit/fortisoar-playbook-builder/blob/main/PRIVACY.md",
+  "termsOfServiceUrl": "https://github.com/git-Jimit/fortisoar-playbook-builder/blob/main/LICENSE",
   "license": "MIT",
   "keywords": ["fortisoar", "soar", "fortinet", "fortisiem", "playbook", "security", "soc", "incident-response"]
 }
