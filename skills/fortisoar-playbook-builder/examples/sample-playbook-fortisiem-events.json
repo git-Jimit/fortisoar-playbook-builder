@@ -59,8 +59,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "220",
-              "left": "260",
+              "top": "165",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
               "group": null,
               "uuid": "5ab5e746-76b4-4445-9668-9f281bc8d163"
@@ -86,8 +86,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "120",
-              "left": "940",
+              "top": "435",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "uuid": "fd49f5b8-71bb-4354-8fc6-f884339ef0ca"
@@ -108,8 +108,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "120",
-              "left": "620",
+              "top": "300",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "593b3687-2497-4f27-83ba-6682c4a78447"
@@ -122,8 +122,8 @@
                 "SourceData": "{\n  \"incident_data\": {{vars.sourceData | toDict}},\n  \"associated_events\": {{vars.steps.getEvents.data}}\n}"
               },
               "status": null,
-              "top": "120",
-              "left": "1240",
+              "top": "570",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "a764b86b-75bb-4d00-9242-4f62fa31749f"
@@ -144,8 +144,8 @@
                 "triggerOnReplicate": false
               },
               "status": null,
-              "top": "120",
-              "left": "80",
+              "top": "30",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62",
               "group": null,
               "uuid": "5bbc52a5-102b-4d92-9d70-3b7821a067fb"
@@ -158,8 +158,8 @@
                 "SourceData": "{{vars.sourceData}}"
               },
               "status": null,
-              "top": "360",
-              "left": "620",
+              "top": "300",
+              "left": "300",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "91e8b693-69f9-4868-860a-3cb859a216fd"

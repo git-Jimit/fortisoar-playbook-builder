@@ -4,9 +4,9 @@ An agent skill that builds, modifies and reviews **FortiSOAR playbooks** as
 complete, importable JSON exports — alert triage, incident response,
 investigations, IOC enrichment, phishing analysis, threat hunting,
 FortiSIEM / FortiAnalyzer queries, response actions, client approval links and
-PDF / HTML reports.
+PDF / HTML / Excel / CSV reports.
 
-Author: **Jimit Patel** · Version 1.1.2 · See `reference/changelog.md` for history.
+Author: **Jimit Patel** · Version 1.1.3 · See `reference/changelog.md` for history.
 
 ## Why it exists
 
@@ -14,7 +14,8 @@ A generated FortiSOAR playbook usually fails in one of two quiet ways: it
 imports and then does nothing (a reference that resolves to empty, a loop over
 an empty list, a field the parser never fills), or it runs and tells the analyst
 nothing useful. Every rule in this skill was written after one of those
-happened on a real appliance, and most are enforced by the bundled validator.
+happened on a real appliance, and each mechanical one is a step in
+`reference/validation-checklist.md`.
 
 ## What is inside
 
@@ -22,21 +23,20 @@ happened on a real appliance, and most are enforced by the bundled validator.
 |---|---|
 | `SKILL.md` | The instructions the agent follows — start here |
 | `reference/` | Schema, step types, conventions, triggers, connector behaviour (FortiGuard, VirusTotal, CrowdStrike, FortiSIEM, email ingestion, WinRM), 44 documented pitfalls, reports |
-| `scripts/validate_playbook.py` | Static validator for any playbook export |
-| `scripts/extract_connector_configs.py` | Harvests connector config uuids from an export of your instance |
-| `assets/pdf_report_engine.py` | Sandbox-safe PDF drawing for code-snippet steps |
+| `reference/validation-checklist.md` | Every check a playbook must pass before delivery, with ERROR / WARN / INFO severity |
+| `reference/fortisiem_event_attributes_1.txt`, `_2.txt` | About 7,000 FortiSIEM attribute names, as CSV text |
 | `examples/` | A verified reference playbook and two real-world samples |
 
-## Using the validator on its own
+## The validator, the config extractor and the PDF engine
 
-It needs only Python 3 and works on any FortiSOAR playbook export, generated or
-hand-built:
+These are optional programs in a separate repository,
+[fortisoar-playbook-tools](https://github.com/git-Jimit/fortisoar-playbook-tools).
+The skill does not need them: it carries the same checks as
+`reference/validation-checklist.md`, the config harvest as instructions in
+`reference/conventions.md`, and the PDF method in `reference/reports.md`.
 
-```
-python3 scripts/validate_playbook.py my_playbook_export.json
-```
-
-It exits non-zero on errors. **ERROR** means the playbook will fail or silently
+The validator needs only Python 3 and works on any FortiSOAR playbook export,
+generated or hand-built. It exits non-zero on errors. **ERROR** means the playbook will fail or silently
 do nothing; **WARN** means it will run but something will hurt at run time;
 **INFO** marks an accepted exception such as an unattached spare step. Exports
 made by hand in the FortiSOAR designer commonly show warnings — use them as a

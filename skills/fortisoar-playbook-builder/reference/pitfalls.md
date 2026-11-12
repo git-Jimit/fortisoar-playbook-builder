@@ -402,7 +402,7 @@ Configuration, the query cannot hardcode a different number, or the two disagree
 and the config one is a lie.
 
 **Check:** for every key in every Set Variable step, grep the playbook for
-`vars.<key>`. No hit means it is dead. The validator warns on this, but only
+`vars.<key>`. No hit means it is dead. The validation checklist warns on this, but only
 looks for the reference — it cannot tell you the code hardcoded the same value
 somewhere else, so read the snippet too.
 
@@ -797,7 +797,7 @@ Build the input in jinja and pass only what the code reads, capping large text:
 ```
 
 Links and indicators live in the markup, not in the base64 image data that makes
-these emails huge, so the cap costs nothing in practice. The validator warns
+these emails huge, so the cap costs nothing in practice. The validation checklist warns
 when a snippet renders a whole record.
 
 Two more sources of bulk, both measured on a production phishing build:
@@ -896,7 +896,7 @@ Two more traps when copying:
   rewrites on import and which now points into the old playbook. Delete the key;
   FortiSOAR sets it again.
 
-The validator errors on any `stepType` outside the documented set, and warns on
+The validation checklist errors on any `stepType` outside the documented set, and warns on
 a foreign `parentstepid`.
 
 ---
@@ -911,7 +911,7 @@ empty list, and **succeeds** having blocked nothing.
 
 Read the child's `parameters` (or its Start step inputs) from an export before
 wiring a Reference step, and re-check them every time a playbook is adapted for
-another client. The validator checks argument names whenever the child is in
+another client. The validation checklist checks argument names whenever the child is in
 the same file.
 
 ---
@@ -1044,7 +1044,7 @@ X = json.loads(unquote_plus("{{ v | tojson | urlencode }}"))
 `{"body":+{"text":+...` and the step failed with
 `400 ... JSONDecodeError: Expecting value: line 1 column 20`. `unquote_plus`
 turns the `+` back into spaces; a literal `+` in the text arrives as `%2B` and is
-decoded correctly. The validator warns on `urlencode` with `unquote(`.
+decoded correctly. The validation checklist warns on `urlencode` with `unquote(`.
 
 The encoded text stays pure ASCII, so the rendered snippet has no quoting,
 escaping or encoding surprises whatever the email contains.

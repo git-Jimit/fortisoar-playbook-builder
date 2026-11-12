@@ -87,6 +87,7 @@ This is the exact structure an importable FortiSOAR playbook export file must ha
 ```
 
 Key fields to get right:
+- `description` — plain-language summary, **255 characters or fewer**. Count before delivering; put longer explanation in the delivery message.
 - `name` — the playbook name shown in the FortiSOAR UI. Use underscores or spaces only, no special characters (see conventions.md). Convention observed: include the source module/connector in brackets, e.g. `Failed Login Investigation [FortiSIEM] (Scheduled)` or `(Manual)`.
 - `collection` — must reference the **same uuid** used for the parent `WorkflowCollection.uuid` above, formatted as `/api/3/workflow_collections/<uuid>`. **Exception on uploaded exports:** when FortiSOAR exports a single playbook, the workflow keeps pointing at its original home collection while the file wraps it in a different synthetic collection, so the two uuids won't match. That is normal and imports fine — preserve it rather than rewriting it. The rule above applies to playbooks generated from scratch.
 - `triggerStep` — must point to the uuid of whichever step is the Start/trigger step, formatted as `/api/3/workflow_steps/<step uuid>`.
@@ -113,15 +114,21 @@ When this skill generates a new playbook, default to a single-workflow `workflow
   "description": null,
   "arguments": { ... shape depends on stepType, see step-types.md ... },
   "status": null,
-  "top": "280",
-  "left": "440",
+  "top": "165",
+  "left": "125",
   "stepType": "/api/3/workflow_step_types/<uuid>",
   "group": null,
   "uuid": "<uuid4>"
 }
 ```
 
-- `top` / `left` — canvas position as **strings**, not numbers. Space steps out left-to-right in the order of execution: increase `left` by roughly 300-400 per step in the main flow, and stagger `top` by ~140-160 for parallel/branch paths so they don't overlap visually. This isn't cosmetic-only — badly overlapping steps make the imported playbook hard for the human to read and edit.
+- `top` / `left` — canvas position as **strings**, not numbers, on the designer grid: `left` = 125 + 175 × column, `top` = 30 + 135 × row (verified on a live appliance).
+  - The main flow goes **down one column**, one row per step.
+  - Branches and error results go in columns to the right.
+  - No two steps may share a position. When you insert steps, move every step below down by 135 per added row.
+  - Routes never lead back to an earlier step; retries and polling use a step's `do_until` or a `for_each` loop.
+
+  This isn't cosmetic only: overlapping steps make the imported playbook hard to read and edit.
 - `name` — must be descriptive of what the step does. Underscores and spaces only (see conventions.md).
 - `stepType` — selects which of the ~10 step behaviors this is. See `step-types.md` for the full table and the exact `arguments` shape required for each.
 

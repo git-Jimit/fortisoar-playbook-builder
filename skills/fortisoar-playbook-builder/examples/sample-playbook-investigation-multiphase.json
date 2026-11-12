@@ -22,7 +22,7 @@
           "name": "Malware Investigation - Unknown File Extension & DNS [Scheduled]",
           "aliasName": null,
           "tag": null,
-          "description": "EXAMPLE - multi-phase investigation pattern. A narrow set of triggers identifies machines worth examining; each candidate is then queried again with no suspicion filter and written up as a case file; indicators are reputation-checked; the workflow ends with a block-ready list. Code snippets are trimmed to their leading comment and return shape - the structure, wiring, step variables, routing and for_each references are complete and accurate. Use this as the reference for how a multi-phase playbook is assembled, not as a runnable playbook.",
+          "description": "EXAMPLE multi-phase investigation: narrow triggers pick machines, each is re-queried and written up as a case, indicators are reputation-checked, and a block-ready list is produced. Code snippets are trimmed, so it is not runnable.",
           "isActive": true,
           "debug": true,
           "singleRecordExecution": false,
@@ -70,7 +70,7 @@
                 "singleRecordExecution": false
               },
               "status": null,
-              "top": "190",
+              "top": "30",
               "left": "125",
               "stepType": "/api/3/workflow_step_types/f414d039-bb0d-4e59-9c39-a8f1e880b18a",
               "group": null,
@@ -90,8 +90,8 @@
                 "report_recipient": ""
               },
               "status": null,
-              "top": "120",
-              "left": "500",
+              "top": "165",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "1ba667f3-f6fa-4a79-9e31-35b80692f972"
@@ -115,7 +115,7 @@
               },
               "status": null,
               "top": "300",
-              "left": "500",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "ba3c5cfd-a840-4977-bf2c-6bd20653898a"
@@ -155,8 +155,8 @@
                 "ignore_errors": true
               },
               "status": null,
-              "top": "300",
-              "left": "900",
+              "top": "435",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "uuid": "4f5ba634-1ee1-402d-8aa5-4a554de3f32f"
@@ -179,8 +179,8 @@
                 }
               },
               "status": null,
-              "top": "300",
-              "left": "1300",
+              "top": "570",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "0e359a9a-5bb0-468a-a549-d8d2bb1a36ea"
@@ -207,8 +207,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "300",
-              "left": "1700",
+              "top": "705",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
               "group": null,
               "uuid": "1f51bae3-9e7f-49e6-b9e3-800fa4a689f6"
@@ -222,8 +222,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "200",
-              "left": "2050",
+              "top": "840",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0109f35d-090b-4a2b-bd8a-94cbc3508562",
               "group": null,
               "uuid": "94d2c07b-2db9-42de-a03f-b3ee356f0d59"
@@ -237,8 +237,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "420",
-              "left": "2050",
+              "top": "840",
+              "left": "300",
               "stepType": "/api/3/workflow_step_types/0109f35d-090b-4a2b-bd8a-94cbc3508562",
               "group": null,
               "uuid": "e5778ec3-c567-4841-871f-49c57505f19f"
@@ -278,8 +278,8 @@
                 "ignore_errors": true
               },
               "status": null,
-              "top": "200",
-              "left": "2400",
+              "top": "975",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "uuid": "9714767d-ceb0-44aa-badf-6afe4bf2cc08"
@@ -302,8 +302,8 @@
                 }
               },
               "status": null,
-              "top": "200",
-              "left": "2800",
+              "top": "1245",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "501b2b6d-3ebf-44f6-9aa7-b69cee4d285a"
@@ -314,8 +314,8 @@
               "uuid": "f1e0e235-b824-4ed3-846c-8f271dee9333",
               "description": null,
               "status": null,
-              "top": "200",
-              "left": "3200",
+              "top": "1380",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "left_offset": null,
@@ -360,8 +360,8 @@
                 }
               },
               "status": null,
-              "top": "200",
-              "left": "3600",
+              "top": "1515",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "3a1b383c-41f8-4896-8c03-69aabe0a13d4"
@@ -384,8 +384,8 @@
                 }
               },
               "status": null,
-              "top": "200",
-              "left": "4000",
+              "top": "1650",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "c706a4c9-acd1-411e-9fa6-1feef6f6849e"
@@ -403,8 +403,8 @@
                 "Report": "{{ vars.report['report_html'] }}"
               },
               "status": null,
-              "top": "200",
-              "left": "4400",
+              "top": "1785",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "df34598e-748c-484d-982c-aa33a9444c7f"
@@ -418,8 +418,8 @@
                 "BlockReady": "false"
               },
               "status": null,
-              "top": "420",
-              "left": "2400",
+              "top": "975",
+              "left": "300",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "dfb8e7df-ca1e-448a-ad67-65eeb1005366"
@@ -459,8 +459,8 @@
                 "ignore_errors": true
               },
               "status": null,
-              "top": "680",
-              "left": "2600",
+              "top": "1110",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "uuid": "ff43cb91-0fc2-435a-8a59-c7deb914a6b4"

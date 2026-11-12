@@ -274,7 +274,7 @@ empty `config` uses the instance's default configuration; otherwise take the
 - Result referenced downstream as `vars.steps.<Step_Name>.data` — but see pitfall 24 for when `.data` is absent; read both the wrapped and the bare list.
 - **Omit `for_each` entirely unless the step loops.** An empty `item`
   (`"for_each": {"item": "", ...}`) fails at run time with CS-WF-3 and the
-  validator rejects it (pitfall 22). This applies to every step type.
+  validation checklist rejects it (pitfall 22). This applies to every step type.
 
 ## 10. Create/Update Record
 `stepType: /api/3/workflow_step_types/2597053c-e718-44b4-8394-4d40fe26d357`
@@ -425,7 +425,7 @@ an alert summary table, an indicator table (verdict colour, details, evidence),
 an "already handled" table and the list of options. Build tables with jinja
 loops. Colours that read on both light and dark themes: header `#1a237e` with
 white text; verdicts red `#C62828`, orange `#E65100`, purple `#6A1B9A`, green
-`#2E7D32`, grey `#757575`; borders `#999`. The validator warns when a manual-input
+`#2E7D32`, grey `#757575`; borders `#999`. The validation checklist warns when a manual-input
 description contains `**` and no HTML tag.
 
 `isRecordLinked: false` with `record: ""` is valid and is what you want when the

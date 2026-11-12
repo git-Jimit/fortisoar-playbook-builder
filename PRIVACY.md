@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**FortiSOAR Playbook Builder** · last updated 29 October 2026
+**FortiSOAR Playbook Builder** · last updated 12 November 2026
 
 This plugin does not collect, store, transmit or share any personal data or
 usage data.
@@ -11,13 +11,12 @@ usage data.
   Claude how to build and review FortiSOAR playbooks. Anything you share while
   using the skill is handled by Claude under Anthropic's own privacy terms, not
   by this plugin.
-- **Python scripts** (a playbook validator and a connector-config extractor).
-  They read only the file you pass them and print results on your own machine.
-  They make no network calls, read no credentials or environment variables, and
-  install nothing.
-- **PDF report engine.** This is code you paste into your own FortiSOAR
-  instance. It runs there and uploads the generated report only to that same
-  FortiSOAR instance.
+- **Example playbooks** (JSON exports) and a list of FortiSIEM attribute names.
+
+The plugin contains no programs. The optional tools in the separate
+fortisoar-playbook-tools repository are not part of this plugin. They also make
+no network calls and read only the file you pass them. The PDF engine there runs
+inside your own FortiSOAR and uploads the report only to that instance.
 
 ## Data sent to the author
 

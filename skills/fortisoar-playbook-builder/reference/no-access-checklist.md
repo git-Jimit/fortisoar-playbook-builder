@@ -44,9 +44,10 @@ stalling — but list it in the delivery message under *unverified*.
 
 ## Self-check by reading
 
-The validator script only helps if you can execute code. When you cannot, walk
-this list against your own output before delivering. Every item is a real
-failure that reached a working playbook.
+Walk `validation-checklist.md` first: it holds every mechanical check, with its
+severity. Then walk this list against your own output before delivering. It
+repeats the checks that matter most and adds the ones only a reader can make.
+Every item is a real failure that reached a working playbook.
 
 **Wiring**
 - [ ] Every step's uuid appears as a route `sourceStep`, unless it is a terminal
@@ -58,6 +59,12 @@ failure that reached a working playbook.
       (on a playbook you generated — not on an uploaded export)
 - [ ] Every uuid is a real uuid4, generated not hand-typed, and unique across
       steps, routes, groups and the workflow itself
+- [ ] No route leads back to an earlier step; retries use `do_until` or
+      `for_each`
+- [ ] Every step sits on the designer grid (`left` = 125 + 175 × column,
+      `top` = 30 + 135 × row, as strings), no two share a position, and the
+      main flow runs down one column
+- [ ] Every playbook `description` is 255 characters or fewer
 
 **Naming**
 - [ ] Step and variable names contain only word characters and spaces. A hyphen
@@ -210,7 +217,8 @@ Close every delivery with this, filled in honestly:
 ## If you *do* have access
 
 Then run things: execute each code snippet with representative input, run the
-validator, import and drive the playbook through the matrix, and read the step
+tools-repository validator if the user has it, import and drive the playbook
+through the matrix, and read the step
 outputs. `planning.md` step 7 assumes this. It is the exception, not the rule —
 and everything above still applies to whatever you could not reach.
 

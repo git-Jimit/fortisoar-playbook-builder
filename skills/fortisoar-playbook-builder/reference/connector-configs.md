@@ -45,7 +45,7 @@ firewall. Choosing the config there is choosing whose firewall gets the block.
 
 Fortinet's own sample playbooks ship with `"config": ""`, and a production
 ingestion playbook carries `"config": "''"` and runs: FortiSOAR falls back to the
-configuration marked `default: true`. The validator reports it as INFO.
+configuration marked `default: true`. The validation checklist reports it as INFO.
 
 **This is how to build a playbook that imports into any instance.** No uuid is
 instance-specific, and connector versions are not enforced (below), so a

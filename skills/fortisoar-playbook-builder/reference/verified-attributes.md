@@ -1,6 +1,6 @@
 # Verified Attributes — what these event types actually populate
 
-`fortisiem_event_attributes_1.csv` / `_2.csv` prove an attribute **name is valid**. It does not prove the parser **fills it in** for a given event type. Those are different, and confusing them is the most common cause of a detection that returns nothing and looks clean.
+`fortisiem_event_attributes_1.txt` / `_2.txt` prove an attribute **name is valid**. It does not prove the parser **fills it in** for a given event type. Those are different, and confusing them is the most common cause of a detection that returns nothing and looks clean.
 
 Everything below was confirmed against raw events from a live instance. Treat it as ground truth for these event types, and as a warning for every other: **assume nothing, verify before you filter on it.**
 

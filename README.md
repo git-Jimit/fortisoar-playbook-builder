@@ -4,10 +4,14 @@ A Claude skill that builds, modifies and reviews **FortiSOAR playbooks** as
 complete, importable JSON exports — alert triage, incident response,
 investigations, IOC enrichment, phishing analysis, threat hunting,
 FortiSIEM / FortiAnalyzer queries, response actions, client approval links and
-PDF / HTML reports.
+PDF / HTML / Excel / CSV reports.
 
 Every rule in it was written after a real failure on a FortiSOAR appliance, and
-most are enforced by the bundled static validator.
+each mechanical one is a step in its validation checklist.
+
+It follows the open Agent Skills format, so it also works in other agents that
+read that format, such as ChatGPT / Codex, Cursor, VS Code and Gemini CLI. It
+was built and tested on Claude.
 
 > Not affiliated with or endorsed by Fortinet. FortiSOAR, FortiSIEM and
 > FortiAnalyzer are trademarks of Fortinet, Inc.
@@ -42,7 +46,13 @@ cp -r fortisoar-playbook-builder/skills/fortisoar-playbook-builder ~/.claude/ski
 
 Claude Code auto-discovers the skill from `SKILL.md` on the next session.
 
-### Option C — Claude.ai / Claude desktop
+### Option C — skills CLI
+
+```bash
+npx skills add git-Jimit/fortisoar-playbook-builder
+```
+
+### Option D — Claude.ai / Claude desktop
 
 Zip the `skills/fortisoar-playbook-builder` folder and upload it under
 **Customize → Skills → Upload skill**.
@@ -54,25 +64,24 @@ Just describe what you need, e.g.:
 > Build a FortiSOAR playbook that runs on alert create, enriches every IP with
 > FortiGuard and VirusTotal, and closes the alert as false positive if all are clean.
 
-The validator also works standalone on any playbook export:
-
-```bash
-python3 skills/fortisoar-playbook-builder/scripts/validate_playbook.py my_playbook.json
-```
-
 See [`skills/fortisoar-playbook-builder/README.md`](skills/fortisoar-playbook-builder/README.md)
 for what is inside and how to give it good inputs.
 
-## What the bundled scripts do
+## Optional tools
 
-`validate_playbook.py` and `extract_connector_configs.py` only read the export
-file you pass them and print to the terminal. They make no network calls, read
-no credentials or environment variables, and install nothing (the validator
-uses `jinja2` for its syntax check if it is already installed).
+The skill contains only instructions and reference files. Three optional
+programs live in a separate repository,
+[fortisoar-playbook-tools](https://github.com/git-Jimit/fortisoar-playbook-tools):
 
-`assets/pdf_report_engine.py` is not run locally: it is source you paste into a
-FortiSOAR Code Snippet step, where it uploads the PDF it draws to that same
-FortiSOAR as an attachment.
+| Tool | What it does |
+|---|---|
+| `validate_playbook.py` | Runs the skill's validation checklist mechanically on any playbook export |
+| `extract_connector_configs.py` | Lists the connector configs, versions, picklists and sub-playbooks in an export |
+| `pdf_report_engine.py` | A sandbox-safe PDF engine to paste into a FortiSOAR Code Snippet step |
+
+The skill works without them: it carries the same checks and methods as written
+instructions. With Claude Code and the tools cloned, Claude can also run the
+validator for a mechanical second check.
 
 ## Layout
 
@@ -86,9 +95,8 @@ FortiSOAR as an attachment.
 └── skills/
     └── fortisoar-playbook-builder/   # the skill (copy THIS for manual install)
         ├── SKILL.md
-        ├── reference/
-        ├── scripts/
-        ├── assets/
+        ├── README.md
+        ├── reference/            # schema, step types, pitfalls, validation checklist
         └── examples/
 ```
 

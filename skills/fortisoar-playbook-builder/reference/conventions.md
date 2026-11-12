@@ -29,7 +29,8 @@ conditions, manual-input bodies, and Set Variable values.
 **Check before delivering:** every `vars.steps.` reference in the whole file must
 match a real step name with spaces replaced by underscores. This was observed in
 a real generated playbook — all seven references carried spaces, and the
-structural validator passed it with zero errors.
+structural validator of the time passed it with zero errors. The validation
+checklist now flags it (`validation-checklist.md` 5.2).
 
 Good step names: `Run_TTP_Query`, `Build_Query_Plan`, `Check Attachments`, `SetResult_Not Found`.
 
@@ -47,13 +48,37 @@ Config uuids, connector versions and picklist uuids belong to **one FortiSOAR in
 
 ## The mechanism: a reference playbook
 
-Ask the user, once, for **one playbook export from their instance that contains the connector steps they use** — ideally a single playbook touching FortiSIEM, the code snippet, threat intel, and anything else in regular use. Then harvest from it:
+Ask the user, once, for **one playbook export from their instance that contains the connector steps they use** — ideally a single playbook touching FortiSIEM, the code snippet, threat intel, and anything else in regular use. Then harvest from it by reading the JSON:
 
-```
-python3 scripts/extract_connector_configs.py <reference.json> [more.json ...]
-```
+1. Walk `data[]` → `workflows[]` → `steps[]`. Every step whose `arguments` has a
+   `connector` key is a connector step (Code Snippet steps included).
+2. For each, record:
+   - `connector`, the technical name (`fortinet-fortisiem`);
+   - the display `name` (`Fortinet FortiSIEM`);
+   - `config` and `version`;
+   - the `operation`;
+   - where it was seen (`playbook name / step name`).
+3. Skip configs that are empty or start with `<`: those are placeholders, not
+   real values.
+4. Merge by connector name, keeping every distinct operation.
+   - If one connector appears with **two different configs**, list both. Some
+     instances have several, for example one per client or one per device.
+   - Never pick one of them silently: the config selects the device.
+5. Search the whole export for `/api/3/picklists/<uuid>`. List each uuid with
+   how often it appears and the field it was set on, and confirm its meaning
+   before reusing it.
+6. List every `workflowReference` with the name of the step that calls it. These
+   are the sub-playbooks the instance already has, and their argument names
+   (pitfall 37).
 
-It prints every connector with its `config`, `version` and the operations seen, plus a JSON reuse block, plus any picklist uuids and sub-playbook references. Use those values directly in the generated playbook.
+Write the result as a short table in your working notes:
+
+| connector | display name | config | version | operations | seen in |
+|---|---|---|---|---|---|
+
+Use those values directly in the generated playbook. If the user has the
+optional tools repository (github.com/git-Jimit/fortisoar-playbook-tools),
+`extract_connector_configs.py <export.json>` produces the same table.
 
 **How to ask, if no reference has been provided yet:**
 
@@ -63,7 +88,7 @@ Ask before generating, not after. A playbook delivered with placeholder configs 
 
 ## Order of preference
 
-1. **A reference playbook has been provided** (this conversation or earlier) → harvest with the script.
+1. **A reference playbook has been provided** (this conversation or earlier) → harvest from it as above.
 2. **The user already uploaded a playbook for another reason** → harvest from that; do it without being asked.
 3. **Neither, and the user is unreachable** → use a clearly-marked placeholder and say so prominently in the delivery message, not buried:
 
@@ -200,7 +225,7 @@ elif isinstance(x, LIST_T):
     ...
 ```
 
-or branch on `isinstance(x, dict)` first and iterate inside a `try`. The validator reports a bare `isinstance(x, list)` as a warning.
+or branch on `isinstance(x, dict)` first and iterate inside a `try`. The validation checklist reports a bare `isinstance(x, list)` as a warning.
 
 **The banned list below is from the lab appliance.** Some production snippets on other instances contain `lambda`, `max()` or `enumerate()` — whether those steps actually succeed was not confirmed. Treat the list as the safe portable subset: code that avoids it runs everywhere.
 

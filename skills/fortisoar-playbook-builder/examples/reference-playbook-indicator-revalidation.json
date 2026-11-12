@@ -23,7 +23,7 @@
           "name": "Blocked Indicator Revalidation",
           "aliasName": null,
           "tag": null,
-          "description": "Re-checks the oldest standing blocks in Blocked IPs against AbuseIPDB and FortiGuard. IPs at or above the configured AbuseIPDB threshold stay blocked; those that have decayed below it become removal candidates, unless FortiGuard still flags them, in which case they are held back for review. Runs on IPs by default; set enabled_types in the Configuration step to widen it to domains, URLs and hashes, which FortiGuard alone scores. Removal is a dummy step - nothing is deleted.",
+          "description": "Re-checks the oldest blocked IPs against AbuseIPDB and FortiGuard. Indicators below the AbuseIPDB threshold become removal candidates unless FortiGuard still flags them. Removal is a dummy step: nothing is deleted.",
           "isActive": true,
           "debug": true,
           "singleRecordExecution": false,
@@ -71,8 +71,8 @@
                 "singleRecordExecution": false
               },
               "status": null,
-              "top": "40",
-              "left": "560",
+              "top": "30",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/f414d039-bb0d-4e59-9c39-a8f1e880b18a",
               "group": null,
               "uuid": "d86ebd35-4d4f-453d-8219-5874ef59f0f1"
@@ -89,8 +89,8 @@
                 "enabled_types": "ip"
               },
               "status": null,
-              "top": "190",
-              "left": "560",
+              "top": "165",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "34fe2880-a516-499c-9982-662f1b997c06"
@@ -123,8 +123,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "340",
-              "left": "560",
+              "top": "300",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/b593663d-7d13-40ce-a3a3-96dece928770",
               "group": null,
               "uuid": "4f85bffb-0e36-4403-8ff2-f20a4aa5fc91"
@@ -145,8 +145,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "490",
-              "left": "560",
+              "top": "435",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "e6687a70-4612-4f5b-996f-894a75b1018a"
@@ -176,8 +176,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "640",
-              "left": "300",
+              "top": "570",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "uuid": "fc9652a4-536c-4f4a-8ff3-13bfae930d8d"
@@ -206,8 +206,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "640",
-              "left": "860",
+              "top": "570",
+              "left": "300",
               "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671",
               "group": null,
               "uuid": "062ef473-8aed-4ec8-8241-7318ab8ce454"
@@ -228,8 +228,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "790",
-              "left": "560",
+              "top": "705",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/1fdd14cc-d6b4-4335-a3af-ab49c8ed2fd8",
               "group": null,
               "uuid": "67999a7e-560b-43a8-a689-38ba97545fc5"
@@ -256,8 +256,8 @@
                 "step_variables": []
               },
               "status": null,
-              "top": "940",
-              "left": "560",
+              "top": "840",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/12254cf5-5db7-4b1a-8cb1-3af081924b28",
               "group": null,
               "uuid": "3f9dbbdb-55a1-49fe-9e8f-636e98b92c0f"
@@ -315,8 +315,8 @@
                 "external_email_attachments": null
               },
               "status": null,
-              "top": "1090",
-              "left": "300",
+              "top": "975",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/fc04082a-d7dc-4299-96fb-6837b1baa0fe",
               "group": null,
               "uuid": "d5bf3a5b-c57d-4ca1-9d07-106465eec8a5"
@@ -331,8 +331,8 @@
                 "removed_count": 0
               },
               "status": null,
-              "top": "1240",
-              "left": "80",
+              "top": "1110",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "1f46ff01-355c-4a09-8fb4-0105b72dd9a9"
@@ -347,8 +347,8 @@
                 "removed_count": "{{ vars.steps.Evaluate_Against_Threshold.data['code_output']['clean_count'] }}"
               },
               "status": null,
-              "top": "1240",
-              "left": "560",
+              "top": "1110",
+              "left": "300",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "a7983900-3d49-4b89-b34f-00a0c92ff659"
@@ -363,8 +363,8 @@
                 "removed_count": 0
               },
               "status": null,
-              "top": "1090",
-              "left": "1120",
+              "top": "975",
+              "left": "300",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "d1016fad-de3d-4523-84f0-4ea3348efb1c"
@@ -384,8 +384,8 @@
                 "removed_count": "{{ vars.removed_count }}"
               },
               "status": null,
-              "top": "1390",
-              "left": "560",
+              "top": "1245",
+              "left": "125",
               "stepType": "/api/3/workflow_step_types/04d0cf46-b6a8-42c4-8683-60a7eaa69e8f",
               "group": null,
               "uuid": "74392c0b-9d7c-46de-8bb0-d3ff74cf36d6"

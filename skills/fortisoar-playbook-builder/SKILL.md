@@ -1,8 +1,8 @@
 ---
 name: "fortisoar-playbook-builder"
-description: Build, modify and review FortiSOAR playbooks as complete, importable JSON exports. Use this skill whenever the user wants a FortiSOAR playbook, workflow or automation — alert triage, incident response, investigation, IOC enrichment, phishing analysis, threat hunting, FortiSIEM or FortiAnalyzer queries, block/isolate response actions, client approval links (manual input), or PDF/HTML reports — even if they describe the logic in plain language without saying "playbook". Also use it to extend, debug, validate or review an existing FortiSOAR playbook export, to adapt a playbook for another client or tenant, or to wire sub-playbooks together.
+description: Build, modify and review FortiSOAR playbooks as complete, importable JSON exports. Use this skill whenever the user wants a FortiSOAR playbook, workflow or automation — alert triage, incident response, investigation, IOC enrichment, phishing analysis, threat hunting, FortiSIEM or FortiAnalyzer queries, block/isolate response actions, client approval links (manual input), or PDF, HTML, Excel or CSV reports — even if they describe the logic in plain language without saying "playbook". Also use it to extend, debug, validate or review an existing FortiSOAR playbook export, to adapt a playbook for another client or tenant, or to wire sub-playbooks together.
 metadata:
-  version: "1.1.2"
+  version: "1.1.3"
   author: Jimit Patel
 ---
 
@@ -12,7 +12,7 @@ Turns a use case, an alert sample or an existing export into a FortiSOAR
 playbook that imports cleanly **and** does useful work once it runs. Every rule
 in this skill came from a playbook that failed on a real appliance — usually one
 that imported without complaint and then did nothing — and each is backed by a
-reference file or a validator check.
+reference file or a check in the validation checklist.
 
 **The workflow at a glance**
 
@@ -23,7 +23,7 @@ reference file or a validator check.
 | 3. Verify fields | Confirm every field path exists *and* is populated | the data sample, `reference/verified-attributes.md` |
 | 4. Design | Steps, branches and routes on paper | `reference/step-types.md` |
 | 5. Generate | The JSON, with uuids made by code | `reference/playbook-schema.md`, `reference/conventions.md` |
-| 6. Validate | Validator to 0 errors / 0 warnings, then a test matrix | `scripts/validate_playbook.py`, `reference/pitfalls.md` |
+| 6. Validate | Checklist to 0 errors / 0 warnings, then a test matrix | `reference/validation-checklist.md`, `reference/pitfalls.md` |
 | 7. Deliver | The file, what to fill in, what was not verified | `reference/no-access-checklist.md` |
 
 Read `reference/playbook-schema.md`, `step-types.md`, `conventions.md` and
@@ -77,17 +77,18 @@ about a threat owes the analyst its reasoning.
 
 ### 3. The delivery bar is 0 errors and 0 warnings
 
-`scripts/validate_playbook.py` ranks findings by severity, not by whether you
-may ignore them. A warning is something that will not stop the import and will
-hurt at run time — a lookup loop that aborts on one bad indicator, a setting
-nothing reads, a code snippet too large for the sandbox. The only accepted
-exceptions are what the validator prints as **INFO** (an intentionally
-unattached spare step); mention those on delivery. Anything else you knowingly
-leave, name in the delivery message with the reason.
+`reference/validation-checklist.md` lists every mechanical check a playbook
+must pass, each marked ERROR, WARN or INFO. The severity says how much damage
+the fault does, not whether you may skip it. A warning will not stop the import
+and will hurt at run time: a lookup loop that aborts on one bad indicator, a
+setting nothing reads, a code snippet too large for the sandbox. The only
+accepted exceptions are the checklist's **INFO** items, such as an
+intentionally unattached spare step; mention those on delivery. Anything else
+you knowingly leave, name in the delivery message with the reason.
 
 Why this strict: across independently generated playbooks, every defect that
-got fixed had a validator check behind it, and every defect that survived was
-documented in prose only.
+got fixed had a written check behind it, and every defect that survived had
+only general prose against it.
 
 ### 4. Native steps first; a Code Snippet only when nothing else can do it
 
@@ -109,7 +110,7 @@ them in the designer. So:
   around anything that can fail.
 
 `conventions.md` → "Native step or Code Snippet?" has the decision table. The
-validator reports the number of code snippets as INFO so the count stays visible.
+checklist reports the number of code snippets as INFO so the count stays visible.
 
 ### 5. Deliver a complete, importable file
 
@@ -133,9 +134,12 @@ Ask in your **first reply** for what you cannot derive (the exact wording is in
   create/update, schedule, called by another playbook, or HTTP.
 - **One real `sourcedata` sample** from the module it runs on.
 - **A playbook export from the same FortiSOAR** containing the connectors in
-  play, to harvest connector config uuids:
-  `python3 scripts/extract_connector_configs.py <export.json>`. If an export is
-  already in the conversation, run it on that without being asked.
+  play, to harvest connector config uuids. Read it and list, for every
+  connector step, its `connector`, `config`, `version`, display `name` and the
+  operations used, plus every picklist uuid (`/api/3/picklists/<uuid>`) and every
+  sub-playbook `workflowReference` (`conventions.md`, "Connector
+  configuration"). If an export is already in the conversation, harvest from it
+  without being asked.
 - **Target module and field names**, and on a multi-tenant instance, **which
   client** the playbook is for.
 - **Whether other playbooks react to alert updates** — before adding any step
@@ -190,7 +194,7 @@ reasonable default can be inferred, proceed and state the assumption.
 A field that exists but is never filled produces a check that returns nothing
 and looks clean — this has silently disabled detections for months.
 
-- **FortiSIEM:** grep `reference/fortisiem_event_attributes_*.csv` (both parts)
+- **FortiSIEM:** grep `reference/fortisiem_event_attributes_*.txt` (both parts)
   to confirm the **name**, then `reference/verified-attributes.md` to confirm the event type
   actually **populates** it.
 - **Any other source:** check the path against the real sample; for FortiAnalyzer
@@ -216,22 +220,30 @@ Follow `reference/playbook-schema.md` and the step shapes exactly. Generate ever
 uuid with code, never by hand. Step names use only letters, digits, underscores
 and spaces — and a space in a step **name** becomes an underscore in its
 **reference** (`conventions.md`). Prefer native steps (principle 4); code
-snippets you do need follow the sandbox rules in `conventions.md`. For a PDF,
-paste `assets/pdf_report_engine.py` — or the client's own report engine if they
-already have one (`reference/reports.md`) — rather than writing a generator.
+snippets you do need follow the sandbox rules in `conventions.md`. Lay the
+steps out on the designer grid ("Playbook layout and description rules" below).
+For a PDF, use the client's own report engine if they already have one, or the
+PDF engine in the tools repository (github.com/git-Jimit/fortisoar-playbook-tools).
+`reference/reports.md` describes how that engine works, so you can follow the
+same method when neither is available.
 
 ### Step 6 — Validate, then write a test matrix
 
-```
-python3 scripts/validate_playbook.py <playbook.json>
-```
+Walk `reference/validation-checklist.md` against the generated JSON. It covers
+the mechanical faults:
+- Jinja syntax errors in any step, and step references that do not resolve;
+- dangling routes, cycles, and decision conditions with no route;
+- broken `triggerStep` and `collection` references, and unknown step types;
+- steps off the designer grid or on top of each other, and descriptions over
+  255 characters;
+- missing or placeholder connector configs, and sub-playbook arguments the
+  child does not declare;
+- banned builtins, oversized code-snippet inputs, empty `for_each` blocks,
+  settings nothing reads, and malformed query conditions.
 
-It catches the mechanical faults: Jinja syntax errors in any step, dangling
-routes, decision conditions with no route, broken `triggerStep` and `collection` references, missing or placeholder
-connector configs, step references that do not resolve, unknown step types,
-sub-playbook arguments the child does not declare, banned builtins, oversized
-code-snippet inputs, empty `for_each` blocks, settings nothing reads, and
-malformed query conditions. Fix until **0 errors, 0 warnings**.
+Fix until **0 errors, 0 warnings**. If the user has the tools repository and you
+can run code, also run its validator, `python3 validate_playbook.py
+<playbook.json>`, which applies the same checks mechanically.
 
 Two things it cannot check:
 
@@ -256,9 +268,9 @@ result, and inspect its output — appliances cap playbook actions per day
 (`CS-WF-38`), and a lab can hit the cap after a few dozen runs
 (`no-access-checklist.md` → "If you do have access").
 
-**No code execution?** Walk the read-only checklist in
-`reference/no-access-checklist.md` against your output and give the user the
-validator command to run.
+**No code execution?** Walk the validation checklist and the read-only
+self-check in `reference/no-access-checklist.md` against your output. Tell the
+user that the optional validator in the tools repository can confirm the result.
 
 ### Step 7 — Deliver
 
@@ -273,6 +285,21 @@ Present the file, then say in plain language:
 - the test matrix.
 
 A first run is a calibration run. Say so rather than implying it is finished.
+
+---
+
+## Playbook layout and description rules
+
+- Keep each playbook `description` to 255 characters or fewer. Count before
+  delivering.
+- Place steps on the designer grid, with `top` and `left` as strings:
+  `left` = 125 + 175 × column, `top` = 30 + 135 × row.
+- The main flow goes down one column, one row per step. Branches and error
+  results go in columns to the right.
+- No two steps may share the same position. When inserting steps, move the
+  steps below down by 135 per added row.
+- No cyclic flow: no route may lead back to an earlier step. For retries or
+  polling, use a step's `do_until` or a `for_each` loop instead of routing back.
 
 ---
 
@@ -312,9 +339,12 @@ auto-block and for each lookup — and shared logic in one sub-playbook.
 
 ### Reports
 
-For a PDF on the record and/or an emailed HTML report, follow
-`reference/reports.md`: one code step builds both from the same data using
-`assets/pdf_report_engine.py`, an Update Record step links the PDF to the record
+For an Excel workbook, a CSV export or another file type, follow the matching
+section of `reference/reports.md`. An `.xlsx` is built with `zipfile` alone,
+with no library, and mailed from `/tmp` or attached to the record. For a PDF on
+the record and/or an emailed HTML report, follow `reference/reports.md`: one code step builds both from the same data using the
+client's report engine or the tools-repository PDF engine (or the same method,
+described in `reports.md`), an Update Record step links the PDF to the record
 (uploading alone does not — pitfall 38), and an optional connector sends the
 HTML. To email the PDF itself, pass its attachment IRI in the SMTP step's
 `iri_list` (`step-types.md` §15). Never put attempted credentials or secrets in
@@ -362,6 +392,7 @@ asks to extend one of them.
 | `reference/pitfalls.md` | every build — the silent-failure modes and the pre-delivery checklist |
 | `reference/planning.md` | step 2 — the seven planning steps |
 | `reference/triggers.md` | step 2 — the five trigger types; automatic triggers on multi-tenant instances |
+| `reference/validation-checklist.md` | step 6 — every mechanical check, with ERROR / WARN / INFO severity |
 | `reference/no-access-checklist.md` | steps 1, 6 and 7 — what to ask, the read-only self-check, the test plan |
 | `reference/connector-configs.md` | before any connector step — default config uuids and which ones vary |
 | `reference/connector-responses.md` | before parsing connector output — FortiGuard, VirusTotal (IP, URL, domain, file), CrowdStrike Falcon, FortiAnalyzer, FortiDeceptor, RichTexttoPDFandEmail, artifact extraction |
@@ -369,11 +400,14 @@ asks to extend one of them.
 | `reference/email-ingestion.md` | any phishing or email playbook — what an IMAP / Exchange email alert holds, its Source values, and Exchange connector setup |
 | `reference/winrm-edl.md` | updating a firewall EDL text file on a Windows server through WinRM |
 | `reference/verified-attributes.md` | before filtering or grouping on a FortiSIEM attribute |
-| `reference/fortisiem_event_attributes_1.csv`, `_2.csv` | ~7,000 FortiSIEM attribute names, split alphabetically (`*`–`maxMatches`, `maxMemUtil`–`zoneName`) — grep both, do not load them |
+| `reference/fortisiem_event_attributes_1.txt`, `_2.txt` | ~7,000 FortiSIEM attribute names, split alphabetically (`*`–`maxMatches`, `maxMemUtil`–`zoneName`) — grep both, do not load them |
 | `reference/investigation-pattern.md` | investigate / triage use cases — detect, pivot, enrich, report |
-| `reference/reports.md` | PDF or HTML output |
+| `reference/reports.md` | PDF, HTML, Excel, CSV or other file output, and delivering it |
 | `reference/changelog.md` | release notes and a summary of how the rules were measured |
-| `scripts/extract_connector_configs.py` | step 1 — harvest config uuids from a supplied export |
-| `scripts/validate_playbook.py` | step 6 — run on every playbook before delivering |
-| `assets/pdf_report_engine.py` | paste into a code snippet to draw a PDF |
 | `examples/*.json` | see "Which examples to model on" |
+
+Optional, outside the skill: the tools repository
+(github.com/git-Jimit/fortisoar-playbook-tools) holds `validate_playbook.py`
+(the checklist as a program), `extract_connector_configs.py` (the config
+harvest as a program) and `pdf_report_engine.py` (the PDF engine to paste into
+a code snippet).

@@ -2,6 +2,48 @@
 
 Newest first. Each entry records what was measured, not only what changed.
 
+## 1.1.3 — directory file-type rules (2026-11-12)
+
+The Claude plugin directory accepts scripts and programs only from Verified
+organizations, so the plugin now holds only Markdown, JSON, text and its icon.
+
+- **Programs moved** to github.com/git-Jimit/fortisoar-playbook-tools:
+  `validate_playbook.py`, `extract_connector_configs.py` and
+  `pdf_report_engine.py`. The validator there now also enforces the new layout
+  rules, so it matches the checklist:
+  - descriptions over 255 characters;
+  - steps off the grid, or sharing a position;
+  - routes that lead back to an earlier step.
+- **The validator became a written checklist**, `reference/validation-checklist.md`.
+  Every check it ran is there with its ERROR / WARN / INFO severity, and the
+  0 errors / 0 warnings delivery bar is unchanged.
+- **Config harvest** is now step-by-step instructions in `conventions.md`.
+- **PDF method** is described in `reports.md`: fonts, text measuring, page model,
+  PDF file structure, file staging through `zipfile`, upload with
+  `upload_file_to_cyops`.
+- **Attribute lists** `fortisiem_event_attributes_1.csv` / `_2.csv` are now
+  `_1.txt` / `_2.txt`, with the same content: 7,030 attributes.
+- **Excel, CSV and other file reports** (`reports.md`, from a production
+  playbook):
+  - `.xlsx` built with `zipfile` alone: the parts list, inline-string cells,
+    styles, frozen header, autofilter and print setup;
+  - CSV quoting, the BOM for Excel and the formula-injection guard;
+  - JSON / TXT output;
+  - delivering a file: mailed from `/tmp` or from a FortiSOAR attachment, and
+    attached to the record.
+- **New layout and description rules** (`SKILL.md`, `playbook-schema.md`,
+  checklist sections 1.3, 3 and 4.2), verified on a live appliance:
+  - `left` = 125 + 175 × column, `top` = 30 + 135 × row, as strings;
+  - the main flow goes down one column, with branches to the right;
+  - no shared positions, and no routes back to an earlier step (use `do_until`
+    or `for_each`);
+  - playbook `description` at most 255 characters.
+  These replace the old left-to-right spacing advice.
+- **Examples:** all three are re-laid on the grid, and the two long descriptions
+  are shortened. The steps, routes and arguments are unchanged. Validator
+  results are unchanged: 0 / 0 for the reference, and 2 and 12 warnings for the
+  two samples.
+
 ## 1.1.2 — directory listing details (2026-10-29)
 
 - Listing metadata: display name, documentation and support links, and a

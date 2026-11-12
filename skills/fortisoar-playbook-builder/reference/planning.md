@@ -61,7 +61,7 @@ three completely different payloads:
 
 They share **no field paths**. A playbook written against the wrong one extracts
 nothing, scores everything CLEAN, and passes every structural check — the
-validator tests wiring, not whether your field paths exist in the data.
+validation checklist tests wiring, not whether your field paths exist in the data.
 
 This actually happened: a phishing playbook was built assuming a FortiSIEM event
 shape, validated clean, and would have found zero indicators in every real email.
