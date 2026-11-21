@@ -79,8 +79,9 @@ server and needs no firewall rule. Nothing connects inbound.
 
 **On-premises:** Host = the server name only (no `https://`, no `/EWS/...`);
 username as UPN, or `DOMAIN\user` if the UPN is rejected; Email Address = the
-mailbox to read; Access Type DELEGATE; Autodiscover off. Reachability check from
-FortiSOAR: `curl -vk https://<host>/EWS/Exchange.asmx` should answer **401**.
+mailbox to read; Access Type DELEGATE; Autodiscover off. Reachability check: an HTTPS
+request from the FortiSOAR server to `https://<host>/EWS/Exchange.asmx` should
+answer **401** (authentication required), which proves the path is open.
 
 **Shared mailbox:** connect as a service account and put the **shared mailbox
 address** in *Email Address* (DELEGATE). The admin grants the account

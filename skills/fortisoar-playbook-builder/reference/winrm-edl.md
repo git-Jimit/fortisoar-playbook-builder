@@ -91,8 +91,8 @@ Why the scripts are written this way:
    exception will not work since one of the network connection types is
    Public"*. Set the profile to Private, or skip setting values that are already
    correct.
-5. Reachability from the FortiSOAR CLI:
-   `curl -s -o /dev/null -w "%{http_code}\n" http://<host>:5985/wsman` should
-   return **405**.
+5. Reachability: an HTTP request from the FortiSOAR server to
+   `http://<host>:5985/wsman` should return status **405**, which proves the
+   WinRM listener answers.
 6. Error meanings: **401** = wrong credentials; **500 `w:AccessDenied`** =
    authenticated but not authorised (see 3); **timeout** = network or firewall.

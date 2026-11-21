@@ -6,7 +6,7 @@ investigations, IOC enrichment, phishing analysis, threat hunting,
 FortiSIEM / FortiAnalyzer queries, response actions, client approval links and
 PDF / HTML / Excel / CSV reports.
 
-Author: **Jimit Patel** · Version 1.1.3 · See `reference/changelog.md` for history.
+Author: **Jimit Patel** · Version 1.1.4 · See `reference/changelog.md` for history.
 
 ## Why it exists
 

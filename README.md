@@ -36,21 +36,19 @@ claude plugin install fortisoar-playbook-builder@fortisoar-skills
 
 ### Option B — Manual (copy the folder)
 
-```bash
-git clone https://github.com/git-Jimit/fortisoar-playbook-builder.git
-cp -r fortisoar-playbook-builder/skills/fortisoar-playbook-builder ~/.claude/skills/
-```
+Download the [latest release](https://github.com/git-Jimit/fortisoar-playbook-builder/releases/latest),
+unzip it, and copy its `skills/fortisoar-playbook-builder` folder to one of:
 
 - `~/.claude/skills/fortisoar-playbook-builder/` → personal (all your projects)
 - `<project>/.claude/skills/fortisoar-playbook-builder/` → project-scoped
 
 Claude Code auto-discovers the skill from `SKILL.md` on the next session.
 
-### Option C — skills CLI
+### Option C — other agents (skills CLI)
 
-```bash
-npx skills add git-Jimit/fortisoar-playbook-builder
-```
+The open [skills](https://skills.sh) CLI can install it into Claude Code or other
+Agent Skills agents. Follow the install steps on the
+[project website](https://git-jimit.github.io/fortisoar-playbook-builder-site/#install).
 
 ### Option D — Claude.ai / Claude desktop
 
@@ -80,8 +78,8 @@ programs live in a separate repository,
 | `pdf_report_engine.py` | A sandbox-safe PDF engine to paste into a FortiSOAR Code Snippet step |
 
 The skill works without them: it carries the same checks and methods as written
-instructions. With Claude Code and the tools cloned, Claude can also run the
-validator for a mechanical second check.
+instructions. If you install the tools as that repository's README describes, Claude can
+also run the validator for a mechanical second check.
 
 ## Layout
 

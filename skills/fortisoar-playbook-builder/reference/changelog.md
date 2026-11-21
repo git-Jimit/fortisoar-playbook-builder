@@ -2,6 +2,17 @@
 
 Newest first. Each entry records what was measured, not only what changed.
 
+## 1.1.4 — no install commands in the plugin (unreleased)
+
+- The plugin directory now asks plugins from organizations that aren't
+  Verified to leave download-and-run commands out of their files, documentation
+  included. The README's manual install now links the latest release, the
+  skills CLI option links the project website's install steps, the optional
+  validator is described without a command line, and the two reachability
+  checks (`email-ingestion.md`, `winrm-edl.md`) describe the request and its
+  expected status instead of giving a `curl` command. No change to how the skill
+  behaves.
+
 ## 1.1.3 — directory file-type rules (2026-11-12)
 
 The Claude plugin directory accepts scripts and programs only from Verified

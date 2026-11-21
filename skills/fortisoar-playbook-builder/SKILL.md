@@ -2,7 +2,7 @@
 name: "fortisoar-playbook-builder"
 description: Build, modify and review FortiSOAR playbooks as complete, importable JSON exports. Use this skill whenever the user wants a FortiSOAR playbook, workflow or automation — alert triage, incident response, investigation, IOC enrichment, phishing analysis, threat hunting, FortiSIEM or FortiAnalyzer queries, block/isolate response actions, client approval links (manual input), or PDF, HTML, Excel or CSV reports — even if they describe the logic in plain language without saying "playbook". Also use it to extend, debug, validate or review an existing FortiSOAR playbook export, to adapt a playbook for another client or tenant, or to wire sub-playbooks together.
 metadata:
-  version: "1.1.3"
+  version: "1.1.4"
   author: Jimit Patel
 ---
 
@@ -241,9 +241,9 @@ the mechanical faults:
 - banned builtins, oversized code-snippet inputs, empty `for_each` blocks,
   settings nothing reads, and malformed query conditions.
 
-Fix until **0 errors, 0 warnings**. If the user has the tools repository and you
-can run code, also run its validator, `python3 validate_playbook.py
-<playbook.json>`, which applies the same checks mechanically.
+Fix until **0 errors, 0 warnings**. If the user has installed the tools repository
+and you can run code, also run its validator on the playbook file (that
+repository's README gives the usage); it applies the same checks mechanically.
 
 Two things it cannot check:
 
