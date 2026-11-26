@@ -52,9 +52,8 @@ order of preference:
 1. **The client's own report engine**, if a playbook on their instance already
    draws their branded PDF (see the next section).
 2. **`pdf_report_engine.py` from the tools repository**
-   (github.com/git-Jimit/fortisoar-playbook-tools). Fetch it if you can reach
-   the web, or ask the user to paste it. Paste it into the snippet after your
-   data preparation.
+   (github.com/git-Jimit/fortisoar-playbook-tools), if the user pastes it into
+   the conversation. Put it into the snippet after your data preparation.
 3. **The same method, written fresh**, when neither is available. Follow "How
    the engine works" below exactly. Every point in it is there because the
    obvious alternative failed in the sandbox.

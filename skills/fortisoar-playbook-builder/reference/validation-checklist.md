@@ -5,12 +5,10 @@ playbook must pass, written so you can run it by reading the generated JSON.
 Every item comes from a playbook that imported cleanly and then failed, or ran
 green and did nothing.
 
-The same checks exist as a Python program, `validate_playbook.py`, in the
-optional tools repository (github.com/git-Jimit/fortisoar-playbook-tools). If
-the user has it and you can run code, run it as well. It parses every Jinja
-template and does not tire on a 40-step playbook. This checklist is the
-reference either way: the program implements it, not the other way round.
-Two items, 3.3 and 4.5, need a reader and are not in the program.
+This checklist is the reference. A separate tools repository implements most
+of it as a program for users who want one; do not download or run it yourself.
+If the user shares its output, treat it as a second opinion. Two items, 3.3 and
+4.5, need a reader in any case.
 
 ## How to use it
 
@@ -30,7 +28,7 @@ Two items, 3.3 and 4.5, need a reader and are not in the program.
   3. Collect every string in `arguments` that contains `{{` or `{%`.
   4. Then go through the sections below in order.
 
-  If you can run code but do not have the tools repository, a throwaway script in
+  If you can run code, a throwaway script in
   your scratch area that loads the JSON and prints those three lists makes the
   pass faster and more reliable. Do not ship it.
 

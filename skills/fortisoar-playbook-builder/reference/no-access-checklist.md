@@ -216,9 +216,8 @@ Close every delivery with this, filled in honestly:
 
 ## If you *do* have access
 
-Then run things: execute each code snippet with representative input, run the
-tools-repository validator if the user has it, import and drive the playbook
-through the matrix, and read the step
+Then run things: execute each code snippet with representative input, import
+and drive the playbook through the matrix, and read the step
 outputs. `planning.md` step 7 assumes this. It is the exception, not the rule —
 and everything above still applies to whatever you could not reach.
 

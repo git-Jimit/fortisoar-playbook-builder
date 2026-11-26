@@ -76,9 +76,7 @@ Write the result as a short table in your working notes:
 | connector | display name | config | version | operations | seen in |
 |---|---|---|---|---|---|
 
-Use those values directly in the generated playbook. If the user has the
-optional tools repository (github.com/git-Jimit/fortisoar-playbook-tools),
-`extract_connector_configs.py <export.json>` produces the same table.
+Use those values directly in the generated playbook.
 
 **How to ask, if no reference has been provided yet:**
 

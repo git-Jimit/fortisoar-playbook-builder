@@ -20,19 +20,10 @@ was built and tested on Claude.
 
 ### Option A — Claude Code plugin (recommended)
 
-Inside Claude Code:
-
-```
-/plugin marketplace add git-Jimit/fortisoar-playbook-builder
-/plugin install fortisoar-playbook-builder@fortisoar-skills
-```
-
-Or from the terminal:
-
-```bash
-claude plugin marketplace add git-Jimit/fortisoar-playbook-builder
-claude plugin install fortisoar-playbook-builder@fortisoar-skills
-```
+In Claude Code's plugin manager, add this repository (`git-Jimit/fortisoar-playbook-builder`)
+as a marketplace and install the `fortisoar-playbook-builder` plugin from the
+`fortisoar-skills` marketplace. The exact steps are on the
+[project website](https://git-jimit.github.io/fortisoar-playbook-builder-site/#install) and in Claude Code's plugin documentation.
 
 ### Option B — Manual (copy the folder)
 
@@ -77,9 +68,8 @@ programs live in a separate repository,
 | `extract_connector_configs.py` | Lists the connector configs, versions, picklists and sub-playbooks in an export |
 | `pdf_report_engine.py` | A sandbox-safe PDF engine to paste into a FortiSOAR Code Snippet step |
 
-The skill works without them: it carries the same checks and methods as written
-instructions. If you install the tools as that repository's README describes, Claude can
-also run the validator for a mechanical second check.
+The skill does not use them: it carries the same checks and methods as written
+instructions. Each tool's own README says how to install and use it.
 
 ## Layout
 

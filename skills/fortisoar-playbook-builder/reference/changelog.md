@@ -10,8 +10,13 @@ Newest first. Each entry records what was measured, not only what changed.
   skills CLI option links the project website's install steps, the optional
   validator is described without a command line, and the two reachability
   checks (`email-ingestion.md`, `winrm-edl.md`) describe the request and its
-  expected status instead of giving a `curl` command. No change to how the skill
-  behaves.
+  expected status instead of giving a `curl` command. The plugin install steps
+  in the README point to the project website instead of listing commands.
+- The skill no longer tells Claude to fetch or run the tools repository's
+  programs (`validation-checklist.md`, `conventions.md`, `no-access-checklist.md`,
+  `reports.md`, `SKILL.md`): the written checklist is the check, and a tool's
+  output is used only when the user shares it. The directory flagged these as
+  download-and-run text (`RUNTIME_FETCH_EXEC`).
 
 ## 1.1.3 — directory file-type rules (2026-11-12)
 

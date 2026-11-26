@@ -223,9 +223,8 @@ and spaces — and a space in a step **name** becomes an underscore in its
 snippets you do need follow the sandbox rules in `conventions.md`. Lay the
 steps out on the designer grid ("Playbook layout and description rules" below).
 For a PDF, use the client's own report engine if they already have one, or the
-PDF engine in the tools repository (github.com/git-Jimit/fortisoar-playbook-tools).
-`reference/reports.md` describes how that engine works, so you can follow the
-same method when neither is available.
+PDF engine the user pastes in. `reference/reports.md` describes how that engine
+works, so you can follow the same method when neither is available.
 
 ### Step 6 — Validate, then write a test matrix
 
@@ -241,9 +240,8 @@ the mechanical faults:
 - banned builtins, oversized code-snippet inputs, empty `for_each` blocks,
   settings nothing reads, and malformed query conditions.
 
-Fix until **0 errors, 0 warnings**. If the user has installed the tools repository
-and you can run code, also run its validator on the playbook file (that
-repository's README gives the usage); it applies the same checks mechanically.
+Fix until **0 errors, 0 warnings**. The checklist is the check: do not download or run
+outside programs for it.
 
 Two things it cannot check:
 
@@ -269,8 +267,9 @@ result, and inspect its output — appliances cap playbook actions per day
 (`no-access-checklist.md` → "If you do have access").
 
 **No code execution?** Walk the validation checklist and the read-only
-self-check in `reference/no-access-checklist.md` against your output. Tell the
-user that the optional validator in the tools repository can confirm the result.
+self-check in `reference/no-access-checklist.md` against your output. If the user runs the
+optional validator from the separate tools repository themselves, ask them to
+share its output.
 
 ### Step 7 — Deliver
 
@@ -406,8 +405,7 @@ asks to extend one of them.
 | `reference/changelog.md` | release notes and a summary of how the rules were measured |
 | `examples/*.json` | see "Which examples to model on" |
 
-Optional, outside the skill: the tools repository
-(github.com/git-Jimit/fortisoar-playbook-tools) holds `validate_playbook.py`
-(the checklist as a program), `extract_connector_configs.py` (the config
-harvest as a program) and `pdf_report_engine.py` (the PDF engine to paste into
-a code snippet).
+Outside the skill, a separate tools repository
+(github.com/git-Jimit/fortisoar-playbook-tools) holds the checklist, the config
+harvest and the PDF engine as programs for users who want them. The skill never
+downloads or runs them.
